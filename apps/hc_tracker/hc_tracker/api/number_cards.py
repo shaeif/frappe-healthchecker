@@ -55,3 +55,16 @@ def notifications_failed_today(filters=None):
 		"route": ["List", "HC Notification Log"],
 		"route_options": {"status": "Failed", "sent_on": [">=", str(start)]},
 	}
+
+
+@frappe.whitelist()
+def follow_ups_due_today(filters=None):
+	f = {"follow_up_on": ["<=", today()]}
+	names = {r.contract for r in frappe.get_list("HC Contact Log", filters=f, fields=["contract"], limit_page_length=0)}
+	open_names = set(frappe.get_list("HC Contract", filters={"status": "Not started", "name": ["in", list(names) or [""]]}, pluck="name"))
+	return {
+		"value": len(open_names),
+		"fieldtype": "Int",
+		"route": ["query-report", "Helpdesk To-Do"],
+		"route_options": {},
+	}

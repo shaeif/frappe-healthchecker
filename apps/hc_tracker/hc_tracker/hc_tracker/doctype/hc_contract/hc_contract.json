@@ -14,6 +14,8 @@
   "status",
   "next_due_date",
   "scheduled_date",
+  "reschedule_reason",
+  "reschedule_note",
   "last_hc_date",
   "people_section",
   "assigned_engineer",
@@ -23,12 +25,26 @@
   "helpdesk_contact",
   "technical_manager",
   "notification_flow",
+  "reminders_paused_until",
   "contract_section",
   "contract_start",
   "contract_end",
   "column_break_contract",
   "scope",
   "notes",
+  "client_contact_section",
+  "client_contact_name",
+  "client_contact_email",
+  "client_contact_phone",
+  "column_break_client",
+  "client_cc_emails",
+  "preferred_contact_method",
+  "helpdesk_tracking_section",
+  "last_contact_on",
+  "last_contact_outcome",
+  "column_break_tracking",
+  "booking_request_sent_on",
+  "last_rescheduled_on",
   "current_cycle_tab",
   "current_report",
   "current_signoff",
@@ -37,7 +53,8 @@
   "notifications_tab",
   "notification_timeline",
   "history_tab",
-  "cycles"
+  "cycles",
+  "reschedules"
  ],
  "fields": [
   {
@@ -94,13 +111,28 @@
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Next Due Date",
-   "reqd": 1
+   "reqd": 1,
+   "in_standard_filter": 1
   },
   {
    "description": "Booked HC window. Required when status is Scheduled.",
    "fieldname": "scheduled_date",
    "fieldtype": "Date",
    "label": "Scheduled Date"
+  },
+  {
+   "depends_on": "eval:doc.scheduled_date && !doc.__islocal",
+   "description": "Asked when a booked date is changed; recorded in the History tab.",
+   "fieldname": "reschedule_reason",
+   "fieldtype": "Select",
+   "label": "Reschedule Reason",
+   "options": "\nClient request\nEngineer unavailable\nAccess / change-freeze window\nPublic holiday\nChanged in calendar\nOther"
+  },
+  {
+   "depends_on": "eval:doc.reschedule_reason",
+   "fieldname": "reschedule_note",
+   "fieldtype": "Small Text",
+   "label": "Reschedule Note"
   },
   {
    "fieldname": "last_hc_date",
@@ -160,6 +192,12 @@
    "options": "HC Notification Flow"
   },
   {
+   "description": "Date-based reminders (except steps marked 'Ignore Pause') wait until this date.",
+   "fieldname": "reminders_paused_until",
+   "fieldtype": "Date",
+   "label": "Reminders Paused Until"
+  },
+  {
    "fieldname": "contract_section",
    "fieldtype": "Section Break",
    "label": "Contract"
@@ -188,6 +226,78 @@
    "fieldname": "notes",
    "fieldtype": "Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "client_contact_section",
+   "fieldtype": "Section Break",
+   "label": "Client Contact"
+  },
+  {
+   "fieldname": "client_contact_name",
+   "fieldtype": "Data",
+   "label": "Client Contact Name"
+  },
+  {
+   "fieldname": "client_contact_email",
+   "fieldtype": "Data",
+   "label": "Client Contact Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "client_contact_phone",
+   "fieldtype": "Data",
+   "label": "Client Contact Phone",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "column_break_client",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Comma separated, copied on booking requests and visit reminders.",
+   "fieldname": "client_cc_emails",
+   "fieldtype": "Small Text",
+   "label": "Client CC Emails"
+  },
+  {
+   "fieldname": "preferred_contact_method",
+   "fieldtype": "Select",
+   "label": "Preferred Contact Method",
+   "options": "\nPhone\nEmail\nTeams\nWhatsApp"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "helpdesk_tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Helpdesk Tracking"
+  },
+  {
+   "fieldname": "last_contact_on",
+   "fieldtype": "Datetime",
+   "label": "Last Contact On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_contact_outcome",
+   "fieldtype": "Data",
+   "label": "Last Contact Outcome",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tracking",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "booking_request_sent_on",
+   "fieldtype": "Datetime",
+   "label": "Booking Request Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_rescheduled_on",
+   "fieldtype": "Datetime",
+   "label": "Last Rescheduled On",
+   "read_only": 1
   },
   {
    "fieldname": "current_cycle_tab",
@@ -235,17 +345,29 @@
    "label": "HC Cycles",
    "options": "HC Cycle",
    "read_only": 1
+  },
+  {
+   "fieldname": "reschedules",
+   "fieldtype": "Table",
+   "label": "Reschedule History",
+   "options": "HC Reschedule",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 0,
  "links": [
   {
+   "link_doctype": "HC Contact Log",
+   "link_fieldname": "contract",
+   "group": "Helpdesk"
+  },
+  {
    "link_doctype": "HC Notification Log",
    "link_fieldname": "contract",
-   "group": "Health Check"
+   "group": "Helpdesk"
   }
  ],
- "modified": "2026-10-11 09:00:00.000000",
+ "modified": "2026-10-12 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Contract",

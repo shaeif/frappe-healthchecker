@@ -15,7 +15,26 @@
   "enable_teams",
   "default_teams_webhook_url",
   "popup_section",
-  "enable_popup_notifications"
+  "enable_popup_notifications",
+  "working_days_section",
+  "weekend_days",
+  "skip_non_working_days",
+  "column_break_working",
+  "block_unavailable_booking",
+  "booking_email_section",
+  "booking_request_subject",
+  "booking_request_template",
+  "todo_section",
+  "enable_helpdesk_todo",
+  "column_break_todo",
+  "todo_horizon_days",
+  "client_reply_wait_days",
+  "summary_section",
+  "management_summary_frequency",
+  "column_break_summary",
+  "management_summary_recipients",
+  "language_section",
+  "notification_language"
  ],
  "fields": [
   {
@@ -87,12 +106,123 @@
    "fieldname": "enable_popup_notifications",
    "fieldtype": "Check",
    "label": "Enable Pop-up Notifications"
+  },
+  {
+   "fieldname": "working_days_section",
+   "fieldtype": "Section Break",
+   "label": "Working Days and Bookings"
+  },
+  {
+   "default": "Friday,Saturday",
+   "description": "Comma separated day names.",
+   "fieldname": "weekend_days",
+   "fieldtype": "Data",
+   "label": "Weekend Days"
+  },
+  {
+   "default": "1",
+   "description": "Reminders planned on a weekend/holiday move to the previous working day (before-steps) or the next working day (after-steps); nothing is sent on non-working days.",
+   "fieldname": "skip_non_working_days",
+   "fieldtype": "Check",
+   "label": "Skip Weekends and Holidays"
+  },
+  {
+   "fieldname": "column_break_working",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Block (instead of warn) booking an engineer on leave or already booked that day, or on a non-working day.",
+   "fieldname": "block_unavailable_booking",
+   "fieldtype": "Check",
+   "label": "Block Unavailable Bookings"
+  },
+  {
+   "fieldname": "booking_email_section",
+   "fieldtype": "Section Break",
+   "label": "Client Booking Request Email"
+  },
+  {
+   "fieldname": "booking_request_subject",
+   "fieldtype": "Small Text",
+   "label": "Booking Request Subject"
+  },
+  {
+   "description": "Jinja: doc, proposed_dates (list), due_date, sender_name. Empty = default.",
+   "fieldname": "booking_request_template",
+   "fieldtype": "Code",
+   "label": "Booking Request Message",
+   "options": "Jinja"
+  },
+  {
+   "fieldname": "todo_section",
+   "fieldtype": "Section Break",
+   "label": "Helpdesk Daily To-Do"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_helpdesk_todo",
+   "fieldtype": "Check",
+   "label": "Enable Helpdesk To-Do"
+  },
+  {
+   "fieldname": "column_break_todo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "45",
+   "description": "Unbooked contracts due within this many days appear in the to-do list.",
+   "fieldname": "todo_horizon_days",
+   "fieldtype": "Int",
+   "label": "Book-Now Horizon (days)"
+  },
+  {
+   "default": "3",
+   "description": "A booking request without reply after this many days appears as 'Awaiting client reply'.",
+   "fieldname": "client_reply_wait_days",
+   "fieldtype": "Int",
+   "label": "Client Reply Wait (days)"
+  },
+  {
+   "fieldname": "summary_section",
+   "fieldtype": "Section Break",
+   "label": "Management Summary"
+  },
+  {
+   "default": "Weekly",
+   "description": "Weekly: every Sunday for the previous 7 days. Monthly: on the 1st for the previous month.",
+   "fieldname": "management_summary_frequency",
+   "fieldtype": "Select",
+   "label": "Summary Frequency",
+   "options": "Off\nWeekly\nMonthly"
+  },
+  {
+   "fieldname": "column_break_summary",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Comma separated. Technical Managers always receive it.",
+   "fieldname": "management_summary_recipients",
+   "fieldtype": "Small Text",
+   "label": "Summary Recipients"
+  },
+  {
+   "fieldname": "language_section",
+   "fieldtype": "Section Break",
+   "label": "Language"
+  },
+  {
+   "default": "English",
+   "description": "Language of emails, Teams cards and pop-ups. Users choose the screen language in their own settings.",
+   "fieldname": "notification_language",
+   "fieldtype": "Select",
+   "label": "Notification Language",
+   "options": "English\nArabic\nEnglish + Arabic"
   }
  ],
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-11 09:00:00.000000",
+ "modified": "2026-10-12 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Settings",

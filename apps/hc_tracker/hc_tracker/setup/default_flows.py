@@ -16,6 +16,21 @@ FREQUENCY_DAYS = {
 	"Half-yearly": (45, 14),
 	"Yearly": (60, 30),
 }
+# days before the booked date the client receives the visit reminder
+CLIENT_REMINDER_DAYS = {"Monthly": 1, "Quarterly": 2, "Half-yearly": 2, "Yearly": 2}
+
+# Arabic templates per default step label (filled on new flows and by the v1.3 patch)
+ARABIC_TEMPLATES = {
+	"Helpdesk": (tpl.HELPDESK_SUBJECT_AR, tpl.HELPDESK_MESSAGE_AR),
+	"Assigned Engineer - HC booked": (tpl.ENGINEER_BOOKED_SUBJECT_AR, tpl.ENGINEER_BOOKED_MESSAGE_AR),
+	"Assigned Engineer - prep reminder": (tpl.ENGINEER_PREP_SUBJECT_AR, tpl.ENGINEER_PREP_MESSAGE_AR),
+	"Technical Manager": (tpl.TM_SUBJECT_AR, tpl.TM_MESSAGE_AR),
+	"Overdue escalation": (tpl.OVERDUE_SUBJECT_AR, tpl.OVERDUE_MESSAGE_AR),
+	"Report sent - Account Manager": (tpl.REPORT_SENT_SUBJECT_AR, tpl.REPORT_SENT_MESSAGE_AR),
+	"Helpdesk follow-up (not booked)": (tpl.HELPDESK_FOLLOWUP_SUBJECT_AR, tpl.HELPDESK_FOLLOWUP_MESSAGE_AR),
+	"Assigned Engineer - HC rescheduled": (tpl.RESCHEDULED_SUBJECT_AR, tpl.RESCHEDULED_MESSAGE_AR),
+	"Client - visit reminder": (tpl.CLIENT_REMINDER_SUBJECT_AR, tpl.CLIENT_REMINDER_MESSAGE_AR),
+}
 
 DEFAULT_FLOW_NAME = "Standard HC Escalation"
 
@@ -31,7 +46,55 @@ FLOW_DEFINITIONS = [
 OPEN_LATER_STATUSES = "Scheduled,In progress,Report sent,Signed off"
 
 
-def build_steps(first_reminder: int, second_reminder: int) -> list[dict]:
+def v13_steps(client_reminder_days: int = 2) -> list[dict]:
+	"""Steps added in v1.3 (also appended to existing default flows by the upgrade patch)."""
+	return [
+		{
+			"step_no": 8,
+			"step_label": "Assigned Engineer - HC rescheduled",
+			"enabled": 1,
+			"recipient_type": "Contract Field",
+			"recipient_field": "assigned_engineer",
+			"cc_type": "Role",
+			"cc_role": "HC Helpdesk",
+			"trigger_mode": "On reschedule",
+			"channel": "Email",
+			"show_popup": 1,
+			"repeat_every_days": 0,
+			"subject_template": tpl.RESCHEDULED_SUBJECT,
+			"message_template": tpl.RESCHEDULED_MESSAGE,
+		},
+		{
+			"step_no": 9,
+			"step_label": "Client - visit reminder",
+			"enabled": 1,
+			"recipient_type": "Client Contact",
+			"cc_type": "Role",
+			"cc_role": "HC Helpdesk",
+			"trigger_mode": "Days before scheduled date",
+			"trigger_days": client_reminder_days,
+			"only_if_status_in": "Scheduled",
+			"channel": "Email",
+			"show_popup": 0,
+			"repeat_every_days": 0,
+			"subject_template": tpl.CLIENT_REMINDER_SUBJECT,
+			"message_template": tpl.CLIENT_REMINDER_MESSAGE,
+		},
+	]
+
+
+def add_arabic(step: dict) -> dict:
+	if step["step_label"] in ARABIC_TEMPLATES:
+		step.setdefault("subject_template_ar", ARABIC_TEMPLATES[step["step_label"]][0])
+		step.setdefault("message_template_ar", ARABIC_TEMPLATES[step["step_label"]][1])
+	return step
+
+
+def build_steps(first_reminder: int, second_reminder: int, client_reminder_days: int = 2) -> list[dict]:
+	return [add_arabic(step) for step in _base_steps(first_reminder, second_reminder) + v13_steps(client_reminder_days)]
+
+
+def _base_steps(first_reminder: int, second_reminder: int) -> list[dict]:
 	return [
 		{
 			"step_no": 1,
@@ -110,6 +173,7 @@ def build_steps(first_reminder: int, second_reminder: int) -> list[dict]:
 			"trigger_mode": "Days after due date (overdue)",
 			"trigger_days": 1,
 			"stop_when_status": "Signed off",
+			"ignore_pause": 1,
 			"channel": "Email + Teams",
 			"show_popup": 1,
 			"repeat_every_days": 1,
@@ -158,6 +222,7 @@ def create_default_flows(only_if_none_exist: bool = False):
 		if frappe.db.exists("HC Notification Flow", flow_name):
 			continue
 		first, second = FREQUENCY_DAYS[days_from]
+		client_days = CLIENT_REMINDER_DAYS[days_from]
 		flow = frappe.new_doc("HC Notification Flow")
 		flow.update(
 			{
@@ -172,6 +237,28 @@ def create_default_flows(only_if_none_exist: bool = False):
 				),
 			}
 		)
-		for step in build_steps(first, second):
+		for step in build_steps(first, second, client_days):
 			flow.append("steps", step)
 		flow.insert(ignore_permissions=True)
+
+
+def upgrade_flow_to_v13(flow_name: str, days_from: str):
+	"""Add the v1.3 steps / Arabic templates / ignore_pause to an existing default flow (idempotent)."""
+	flow = frappe.get_doc("HC Notification Flow", flow_name)
+	labels = {s.step_label for s in flow.steps}
+	used = {int(s.step_no) for s in flow.steps}
+	for step in v13_steps(CLIENT_REMINDER_DAYS[days_from]):
+		if step["step_label"] in labels:
+			continue
+		while step["step_no"] in used:
+			step["step_no"] += 1
+		used.add(step["step_no"])
+		flow.append("steps", add_arabic(step))
+	for row in flow.steps:
+		if row.step_label in ARABIC_TEMPLATES:
+			row.subject_template_ar = row.subject_template_ar or ARABIC_TEMPLATES[row.step_label][0]
+			row.message_template_ar = row.message_template_ar or ARABIC_TEMPLATES[row.step_label][1]
+		if row.step_label == "Overdue escalation":
+			row.ignore_pause = 1
+	flow.flags.ignore_permissions = True
+	flow.save()

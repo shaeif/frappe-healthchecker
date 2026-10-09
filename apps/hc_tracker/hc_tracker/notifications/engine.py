@@ -17,6 +17,7 @@ from frappe.utils import (
 	date_diff,
 	escape_html,
 	formatdate,
+	get_datetime,
 	get_url_to_form,
 	getdate,
 	now_datetime,
@@ -24,6 +25,7 @@ from frappe.utils import (
 
 from hc_tracker.notifications import channels as ch
 from hc_tracker.notifications import templates as tpl
+from hc_tracker.scheduling import is_working_day, shift_to_working_day, skip_non_working_days
 from hc_tracker.utils import (
 	CONTRACT_USER_FIELDS,
 	get_period_label,
@@ -37,6 +39,8 @@ MODE_AFTER_DUE = "Days after due date (overdue)"
 MODE_BEFORE_SCHEDULED = "Days before scheduled date"
 MODE_AFTER_PREVIOUS = "Days after previous step if not resolved"
 MODE_STATUS = "On status change"
+MODE_RESCHEDULE = "On reschedule"
+EVENT_MODES = (MODE_STATUS, MODE_RESCHEDULE)
 
 CH_EMAIL = "Email"
 CH_TEAMS = "Teams"
@@ -103,18 +107,34 @@ def get_sent_map(contract_name: str, flow_name: str, cycle_label: str) -> dict:
 			"period_label": cycle_label,
 			"status": "Sent",
 		},
-		fields=["step_no", "channel", "run_date"],
+		fields=["step_no", "channel", "run_date", "sent_on"],
 		order_by="run_date asc",
 	)
 	sent = {}
 	for row in rows:
 		run_date = getdate(row.run_date)
-		entry = sent.setdefault(cint(row.step_no), {"first": run_date, "last": run_date, "channels": {}})
+		entry = sent.setdefault(
+			cint(row.step_no), {"first": run_date, "last": run_date, "channels": {}, "sent_on": {}}
+		)
 		entry["first"] = min(entry["first"], run_date)
 		entry["last"] = max(entry["last"], run_date)
 		previous = entry["channels"].get(row.channel)
 		entry["channels"][row.channel] = max(previous, run_date) if previous else run_date
+		sent_on = get_datetime(row.sent_on) if row.sent_on else None
+		if sent_on and (row.channel not in entry["sent_on"] or sent_on > entry["sent_on"][row.channel]):
+			entry["sent_on"][row.channel] = sent_on
 	return sent
+
+
+def _sent_since(sent: dict | None, since) -> dict | None:
+	"""Only the channels sent at/after `since` (used to restart scheduled-date reminders after a reschedule)."""
+	if not sent or not since:
+		return sent
+	since = get_datetime(since)
+	channels = {ch: d for ch, d in sent["channels"].items() if sent["sent_on"].get(ch) and sent["sent_on"][ch] >= since}
+	if not channels:
+		return None
+	return {**sent, "channels": channels, "first": min(channels.values()), "last": max(channels.values())}
 
 
 def get_failure_map(contract_name: str, flow_name: str, cycle_label: str) -> dict:
@@ -204,6 +224,10 @@ def resolve_target(contract, kind, field, role, user, email, settings, fallback_
 			entry = _value_entry(address)
 			if entry:
 				entries.append(entry)
+	elif kind == "Client Contact":
+		for address in [contract.get("client_contact_email"), *split_list(contract.get("client_cc_emails"))]:
+			if address and "@" in address:
+				entries.append({"email": address.strip(), "user": None})
 
 	if not entries and fallback_role:
 		entries.extend(users_with_role(fallback_role))
@@ -287,7 +311,7 @@ def _previous_step_no(step, steps) -> int | None:
 	return max(earlier) if earlier else None
 
 
-def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, status_event=None):
+def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, status_event=None, reschedule_event=False):
 	"""Evaluate one step for one contract on `on_date`.
 
 	Returns a frappe._dict with: state (Sent/Due/Pending/Skipped), reason, planned_date,
@@ -321,6 +345,21 @@ def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, statu
 	status = contract.status
 	due = getdate(contract.next_due_date) if contract.next_due_date else None
 
+	if mode == MODE_RESCHEDULE:
+		result.planned_label = _("When the booked date changes")
+		if reschedule_event:
+			# Every reschedule notifies again (no once-per-cycle de-duplication)
+			result.due_channels = list(result.channels)
+			result.planned_date = on_date
+			result.state = STATE_DUE if result.channels else STATE_SKIPPED
+			result.reason = _("Booked date changed") if result.channels else _("No channel applies")
+			return result
+		result.state = STATE_SENT if sent else STATE_PENDING
+		result.reason = (
+			_("Last sent on {0}").format(formatdate(sent["last"])) if sent else _("Waiting for a reschedule")
+		)
+		return result
+
 	if mode == MODE_STATUS:
 		result.planned_label = _("When status becomes {0}").format(step.on_status or "?")
 		if status_event and status_event == step.on_status:
@@ -350,6 +389,9 @@ def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, statu
 			return result
 		scheduled = getdate(contract.scheduled_date)
 		planned = add_days(scheduled, -days)
+		# A reschedule restarts the reminders that count back from the booked date
+		sent = _sent_since(sent, contract.get("last_rescheduled_on"))
+		result.last_sent = sent["last"] if sent else None
 		if on_date > scheduled and not sent:
 			result.planned_date = getdate(planned)
 			result.state, result.reason = STATE_SKIPPED, _("Scheduled date has passed")
@@ -367,11 +409,28 @@ def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, statu
 		return result
 
 	result.planned_date = getdate(planned)
+	if mode not in EVENT_MODES and skip_non_working_days():
+		direction = -1 if mode in (MODE_BEFORE_DUE, MODE_BEFORE_SCHEDULED) else 1
+		shifted = shift_to_working_day(result.planned_date, direction)
+		if shifted != result.planned_date:
+			result.planned_label += " " + _("(moved to working day)")
+			result.planned_date = shifted
 
 	block = _status_block_reason(step, status)
 	if block:
 		result.state = STATE_SENT if sent else STATE_SKIPPED
 		result.reason = block
+		return result
+
+	paused_until = contract.get("reminders_paused_until")
+	if (
+		mode not in EVENT_MODES
+		and paused_until
+		and not cint(step.get("ignore_pause"))
+		and on_date < getdate(paused_until)
+	):
+		result.state = STATE_SENT if sent else STATE_PENDING
+		result.reason = _("Reminders paused until {0}").format(formatdate(paused_until))
 		return result
 
 	if on_date < result.planned_date:
@@ -410,7 +469,7 @@ def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, statu
 # ---------------------------------------------------------------------------
 
 
-def build_context(contract, step, flow, on_date, cycle_label, status_event=None) -> dict:
+def build_context(contract, step, flow, on_date, cycle_label, status_event=None, extra=None) -> dict:
 	on_date = getdate(on_date)
 	due = getdate(contract.next_due_date) if contract.next_due_date else on_date
 	days_left = date_diff(due, on_date)
@@ -430,6 +489,10 @@ def build_context(contract, step, flow, on_date, cycle_label, status_event=None)
 		"today": formatdate(on_date),
 		"event_status": status_event or "",
 		"last_cycle": cycles[-1] if cycles else None,
+		"old_scheduled_date": "",
+		"reschedule_reason": "",
+		"reschedule_note": "",
+		**(extra or {}),
 	}
 
 
@@ -438,8 +501,33 @@ def render(template: str | None, default: str, context: dict) -> str:
 
 
 def render_step(step, context) -> tuple[str, str]:
-	subject = render(step.subject_template, tpl.DEFAULT_SUBJECT, context).strip().replace("\n", " ")
-	message = render(step.message_template, tpl.DEFAULT_MESSAGE, context)
+	"""Render subject/message in the HC Settings notification language (English / Arabic / both)."""
+	language = get_settings().notification_language or "English"
+
+	def english():
+		subject = render(step.subject_template, tpl.DEFAULT_SUBJECT, context)
+		return subject.strip().replace("\n", " "), render(step.message_template, tpl.DEFAULT_MESSAGE, context)
+
+	def arabic():
+		previous_lang = frappe.local.lang
+		frappe.local.lang = "ar"  # so {{ _(...) }} in the templates renders Arabic
+		try:
+			subject = render(step.get("subject_template_ar"), tpl.DEFAULT_SUBJECT_AR, context)
+			message = render(step.get("message_template_ar"), tpl.DEFAULT_MESSAGE_AR, context)
+		finally:
+			frappe.local.lang = previous_lang
+		return subject.strip().replace("\n", " "), message
+
+	if language == "Arabic":
+		subject, message = arabic()
+		message = tpl.rtl(message)
+	elif language == "English + Arabic":
+		subject_en, message_en = english()
+		subject_ar, message_ar = arabic()
+		subject = f"{subject_en} | {subject_ar}"
+		message = tpl.bilingual(message_en, message_ar)
+	else:
+		subject, message = english()
 	return subject[:900], message
 
 
@@ -511,9 +599,11 @@ def deliver_channel(channel, *, to, cc, subject, message, contract, step, settin
 		raise ch.DeliveryError(_("Unknown channel {0}").format(channel))
 
 
-def send_step(contract, flow, step, evaluation, on_date, cycle_label, settings, status_event=None) -> list:
+def send_step(
+	contract, flow, step, evaluation, on_date, cycle_label, settings, status_event=None, extra_context=None
+) -> list:
 	"""Send every due channel of a step and record one HC Notification Log row per channel."""
-	context = build_context(contract, step, flow, on_date, cycle_label, status_event)
+	context = build_context(contract, step, flow, on_date, cycle_label, status_event, extra_context)
 	indicator = "red" if step.trigger_mode == MODE_AFTER_DUE else "blue"
 	to_emails = ch.emails_only(evaluation.to)
 	cc_emails = ch.emails_only(evaluation.cc)
@@ -603,12 +693,16 @@ def process_contract(contract, on_date=None) -> int:
 	flow = get_contract_flow(contract)
 	if not flow:
 		return 0
+	if skip_non_working_days() and not is_working_day(on_date):
+		return 0  # nothing is sent on weekends/holidays; the <= checks catch up on the next working day
 	settings = get_settings()
 	cycle_label = get_cycle_label(contract)
 	sent_map = get_sent_map(contract.name, flow.name, cycle_label)
 	steps = sorted_steps(flow)
 	written = 0
 	for step in steps:
+		if step.trigger_mode == MODE_RESCHEDULE:
+			continue
 		if step.trigger_mode == MODE_STATUS:
 			written += _retry_failed_status_step(contract, flow, step, steps, on_date, cycle_label, sent_map, settings)
 			continue
@@ -648,6 +742,31 @@ def _retry_failed_status_step(contract, flow, step, steps, on_date, cycle_label,
 	logs = send_step(contract, flow, step, evaluation, on_date, cycle_label, settings, status_event=step.on_status)
 	_mark_sent(sent_map, step.step_no, on_date, logs)
 	return len(logs)
+
+
+def fire_reschedule(contract, old_date=None, reason=None, note=None) -> int:
+	"""Send 'On reschedule' steps (called from HCContract.on_update when the booked date changes)."""
+	flow = get_contract_flow(contract)
+	if not flow:
+		return 0
+	on_date = get_today()
+	settings = get_settings()
+	cycle_label = get_cycle_label(contract)
+	steps = sorted_steps(flow)
+	extra = {
+		"old_scheduled_date": formatdate(old_date) if old_date else "",
+		"reschedule_reason": reason or "",
+		"reschedule_note": note or "",
+	}
+	written = 0
+	for step in steps:
+		if step.trigger_mode != MODE_RESCHEDULE:
+			continue
+		evaluation = evaluate_step(contract, step, on_date, {}, settings, steps, reschedule_event=True)
+		if evaluation.state != STATE_DUE:
+			continue
+		written += len(send_step(contract, flow, step, evaluation, on_date, cycle_label, settings, extra_context=extra))
+	return written
 
 
 def fire_status_change(contract, new_status: str, cycle_label: str | None = None) -> int:

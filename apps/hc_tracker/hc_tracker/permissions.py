@@ -86,6 +86,16 @@ def hc_notification_log_query(user=None, doctype=None):
 	return _linked_contract_query("HC Notification Log", user)
 
 
+def hc_contact_log_query(user=None, doctype=None):
+	return _linked_contract_query("HC Contact Log", user)
+
+
+def hc_contact_log_has_permission(doc, ptype=None, user=None, debug=False):
+	if ptype == "create" and not doc.get("contract"):
+		return True
+	return hc_notification_log_has_permission(doc, ptype, user, debug)
+
+
 def hc_notification_log_has_permission(doc, ptype=None, user=None, debug=False):
 	user = user or frappe.session.user
 	roles = user_roles(user)

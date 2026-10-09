@@ -1,0 +1,40 @@
+{
+ "chart_name": "HC Avg Days Due to Sign-off",
+ "chart_type": "Custom",
+ "color": "#e67e22",
+ "creation": "2026-10-12 09:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Dashboard Chart",
+ "document_type": "HC Contract",
+ "dynamic_filters_json": "[]",
+ "filters_json": "{}",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "modified": "2026-10-12 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HC Tracker",
+ "name": "HC Avg Days Due to Sign-off",
+ "owner": "Administrator",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "HC Technical Manager"
+  },
+  {
+   "role": "HC Account Manager"
+  },
+  {
+   "role": "HC Helpdesk"
+  },
+  {
+   "role": "HC Engineer"
+  }
+ ],
+ "source": "HC Tracker Metrics",
+ "timeseries": 0,
+ "type": "Line",
+ "use_report_chart": 0
+}

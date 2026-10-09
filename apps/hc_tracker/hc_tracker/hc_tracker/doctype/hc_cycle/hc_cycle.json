@@ -7,6 +7,9 @@
  "field_order": [
   "hc_date",
   "period_label",
+  "due_date",
+  "signed_off_on",
+  "days_late",
   "engineer",
   "report",
   "sign_off_file",
@@ -28,6 +31,25 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Period"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "signed_off_on",
+   "fieldtype": "Date",
+   "label": "Signed Off On",
+   "read_only": 1
+  },
+  {
+   "description": "HC date minus due date (0 or less = on time).",
+   "fieldname": "days_late",
+   "fieldtype": "Int",
+   "label": "Days Late",
+   "read_only": 1
   },
   {
    "columns": 2,
@@ -68,7 +90,7 @@
  "index_web_pages_for_search": 0,
  "istable": 1,
  "links": [],
- "modified": "2026-10-08 10:00:00.000000",
+ "modified": "2026-10-12 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Cycle",

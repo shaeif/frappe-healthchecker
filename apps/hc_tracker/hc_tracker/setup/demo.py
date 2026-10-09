@@ -98,6 +98,12 @@ def create_test_contracts(base_date=None):
 			scope="2 PA-850, 10 switches"),
 	]
 
+	for i, values in enumerate(contracts, start=1):
+		values.setdefault("client_contact_name", f"IT Manager {i}")
+		values.setdefault("client_contact_email", f"it{i}@client{i}.{TEST_DOMAIN}")
+		values.setdefault("client_contact_phone", f"+974 5500 00{i:02d}")
+		values.setdefault("preferred_contact_method", "Phone" if i % 2 else "Email")
+
 	names = []
 	for values in contracts:
 		if frappe.db.exists("HC Contract", values["client_id"]):

@@ -70,7 +70,7 @@ class HCNotificationFlow(Document):
 						)
 					)
 
-			for fieldname in ("subject_template", "message_template"):
+			for fieldname in ("subject_template", "message_template", "subject_template_ar", "message_template_ar"):
 				if step.get(fieldname):
 					validate_template(step.get(fieldname))
 

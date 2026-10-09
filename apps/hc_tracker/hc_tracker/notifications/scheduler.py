@@ -27,13 +27,25 @@ RENEWAL_LABEL = "Contract renewal alert"
 
 
 def run_daily(on_date=None):
+	from hc_tracker.notifications.helpdesk_todo import send_helpdesk_todo
+	from hc_tracker.notifications.summary import send_management_summary
+	from hc_tracker.scheduling import is_working_day, skip_non_working_days
+
 	on_date = get_today(on_date)
 	summary = {"date": str(on_date)}
-	for key, job in (
-		("flow_logs", run_notification_flows),
-		("digest", send_overdue_digest),
-		("renewal_alerts", send_renewal_alerts),
-	):
+	jobs = [("management_summary", send_management_summary)]
+	if skip_non_working_days() and not is_working_day(on_date):
+		# Weekend / public holiday: nothing goes to the team; everything catches up on the next working day
+		summary["skipped"] = "non-working day"
+	else:
+		jobs = [
+			("flow_logs", run_notification_flows),
+			("digest", send_overdue_digest),
+			("renewal_alerts", send_renewal_alerts),
+			("helpdesk_todo", send_helpdesk_todo),
+			*jobs,
+		]
+	for key, job in jobs:
 		try:
 			summary[key] = job(on_date)
 			frappe.db.commit()
@@ -159,8 +171,13 @@ def send_overdue_digest(on_date=None, force=False) -> str:
 
 	period_label = f"digest-{on_date}"
 	recipients = list(dict.fromkeys(split_list(settings.digest_recipients) + _technical_manager_emails(settings)))
-	subject = _("[HC] Daily overdue digest {0}: {1} overdue health check(s)").format(formatdate(on_date), len(rows))
-	html = build_digest_html(rows, on_date)
+	from hc_tracker.notifications import templates as tpl
+
+	subject = tpl.pick(
+		_("[HC] Daily overdue digest {0}: {1} overdue health check(s)").format(formatdate(on_date), len(rows)),
+		f"[فحص الشبكة] ملخص المتأخرات {formatdate(on_date)}: {len(rows)}",
+	)
+	html = tpl.wrap(build_digest_html(rows, on_date))
 	results = []
 
 	channel_jobs = [(CH_EMAIL, lambda: ch.send_email(recipients, [], subject, html))]

@@ -5,6 +5,28 @@ frappe.listview_settings["HC Contract"] = {
 	add_fields: ["status", "next_due_date", "last_hc_date", "contract_end", "frequency"],
 	hide_name_column: true,
 
+	onload(listview) {
+		if (frappe.model.can_create("HC Contract") && frappe.model.can_create("Data Import")) {
+			listview.page.add_inner_button(
+				__("Download Excel Template"),
+				() => window.open("/api/method/hc_tracker.api.import_tools.download_import_template"),
+				__("Import")
+			);
+			listview.page.add_inner_button(
+				__("Import from Excel"),
+				() =>
+					frappe.new_doc("Data Import", {
+						reference_doctype: "HC Contract",
+						import_type: "Insert New Records",
+					}),
+				__("Import")
+			);
+		}
+		listview.page.add_inner_button(__("Booking Calendar"), () =>
+			frappe.set_route("List", "HC Contract", "Calendar", "default")
+		);
+	},
+
 	get_indicator(doc) {
 		const today = frappe.datetime.get_today();
 

@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.model import no_value_fields, table_fields
 from frappe.model.document import Document
-from frappe.utils import add_months, cstr, getdate, today
+from frappe.utils import add_months, cstr, date_diff, getdate, now_datetime, today
 
 from hc_tracker.utils import (
 	ROLE_ACCOUNT_MANAGER,
@@ -20,7 +20,18 @@ from hc_tracker.utils import (
 
 OPEN_WORK_STATUSES = ("Not started", "Scheduled", "In progress")
 # Fields a Helpdesk-only user may change on an existing contract
-HELPDESK_EDITABLE_FIELDS = {"status", "scheduled_date"}
+HELPDESK_EDITABLE_FIELDS = {
+	"status",
+	"scheduled_date",
+	"reschedule_reason",
+	"reschedule_note",
+	"reminders_paused_until",
+	"client_contact_name",
+	"client_contact_email",
+	"client_contact_phone",
+	"client_cc_emails",
+	"preferred_contact_method",
+}
 
 
 class HCContract(Document):
@@ -44,19 +55,30 @@ class HCContract(Document):
 		self.validate_helpdesk_changes()
 		self.interval_months = get_interval_months(self.frequency)
 		self.validate_dates()
+		self.validate_client_contact()
 		self.set_notification_flow()
 		self.set_report_sent()
 		self.validate_scheduled()
+		self.check_engineer_availability()
+		self.track_reschedule()
 		self.process_sign_off()
 		self.capture_status_event()
 
 	def on_update(self):
 		events = self.flags.get("hc_status_events") or []
 		self.flags.hc_status_events = []
-		if not events or frappe.flags.in_import or frappe.flags.in_install or frappe.flags.in_migrate:
+		reschedule = self.flags.get("hc_reschedule")
+		self.flags.hc_reschedule = None
+		if frappe.flags.in_import or frappe.flags.in_install or frappe.flags.in_migrate:
 			return
 
-		from hc_tracker.notifications.engine import fire_status_change
+		from hc_tracker.notifications.engine import fire_reschedule, fire_status_change
+
+		if reschedule:
+			try:
+				fire_reschedule(self, **reschedule)
+			except Exception:
+				frappe.log_error(title=f"HC Tracker: reschedule notification failed for {self.name}")
 
 		for status, cycle_label in events:
 			try:
@@ -98,7 +120,7 @@ class HCContract(Document):
 				changed.append(_(df.label))
 		if changed:
 			frappe.throw(
-				_("Helpdesk can only change Status and Scheduled Date. Not allowed: {0}").format(
+				_("Helpdesk can only change the booking, the client contact and the reminder pause. Not allowed: {0}").format(
 					", ".join(changed)
 				),
 				frappe.PermissionError,
@@ -113,6 +135,64 @@ class HCContract(Document):
 	def validate_dates(self):
 		if self.contract_start and self.contract_end and getdate(self.contract_end) < getdate(self.contract_start):
 			frappe.throw(_("Contract End cannot be before Contract Start."))
+
+	def validate_client_contact(self):
+		from hc_tracker.utils import split_list
+
+		if self.client_contact_email:
+			frappe.utils.validate_email_address(self.client_contact_email.strip(), throw=True)
+		for address in split_list(self.client_cc_emails):
+			frappe.utils.validate_email_address(address, throw=True)
+
+	def check_engineer_availability(self):
+		"""Warn (or block, per HC Settings) when the booking clashes with leave, another booking or a holiday."""
+		if not self.scheduled_date or self.status not in ("Scheduled", "In progress"):
+			return
+		if not (self.is_new() or self.has_value_changed("scheduled_date") or self.has_value_changed("assigned_engineer")
+				or self.has_value_changed("status")):
+			return
+		from hc_tracker.scheduling import check_availability
+		from hc_tracker.utils import get_settings
+
+		problems = check_availability(self.assigned_engineer, self.scheduled_date, None if self.is_new() else self.name)
+		if not problems:
+			return
+		message = "<br>".join(p["message"] for p in problems)
+		if frappe.utils.cint(get_settings().block_unavailable_booking):
+			frappe.throw(message, title=_("Engineer not available"))
+		frappe.msgprint(message, title=_("Check the booking"), indicator="orange")
+
+	def track_reschedule(self):
+		"""Record a changed booked date in the Reschedule History and trigger 'On reschedule' steps."""
+		self.flags.hc_reschedule = None
+		before = self.get_doc_before_save()
+		if self.is_new() or not before or not before.scheduled_date or not self.scheduled_date:
+			if not self.scheduled_date:
+				self.reschedule_reason = None
+				self.reschedule_note = None
+			return
+		if getdate(before.scheduled_date) == getdate(self.scheduled_date):
+			return
+		reason = self.reschedule_reason or _("Not specified")
+		self.append(
+			"reschedules",
+			{
+				"changed_on": now_datetime(),
+				"old_date": before.scheduled_date,
+				"new_date": self.scheduled_date,
+				"reason": reason,
+				"note": self.reschedule_note,
+				"changed_by": frappe.session.user,
+			},
+		)
+		self.last_rescheduled_on = now_datetime()
+		self.flags.hc_reschedule = {
+			"old_date": before.scheduled_date,
+			"reason": reason,
+			"note": self.reschedule_note,
+		}
+		self.reschedule_reason = None
+		self.reschedule_note = None
 
 	def set_notification_flow(self):
 		from hc_tracker.notifications.engine import get_flow_for_frequency
@@ -155,6 +235,9 @@ class HCContract(Document):
 			{
 				"hc_date": hc_date,
 				"period_label": cycle_label,
+				"due_date": previous_due,
+				"signed_off_on": getdate(today()),
+				"days_late": date_diff(hc_date, previous_due),
 				"engineer": self.assigned_engineer,
 				"report": self.current_report,
 				"sign_off_file": self.current_signoff,

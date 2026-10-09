@@ -32,13 +32,17 @@
   "column_break_timing",
   "only_if_status_in",
   "stop_when_status",
+  "ignore_pause",
   "delivery_section",
   "show_popup",
   "column_break_delivery",
   "teams_webhook_url",
   "message_section",
   "subject_template",
-  "message_template"
+  "message_template",
+  "arabic_section",
+  "subject_template_ar",
+  "message_template_ar"
  ],
  "fields": [
   {
@@ -76,12 +80,12 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Trigger Mode",
-   "options": "Days before due date\nDays after due date (overdue)\nDays before scheduled date\nDays after previous step if not resolved\nOn status change",
+   "options": "Days before due date\nDays after due date (overdue)\nDays before scheduled date\nDays after previous step if not resolved\nOn status change\nOn reschedule",
    "reqd": 1
   },
   {
    "columns": 1,
-   "depends_on": "eval:doc.trigger_mode!='On status change'",
+   "depends_on": "eval:!['On status change','On reschedule'].includes(doc.trigger_mode)",
    "fieldname": "trigger_days",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -107,7 +111,7 @@
    "fieldname": "recipient_type",
    "fieldtype": "Select",
    "label": "Recipient Type",
-   "options": "Contract Field\nRole\nSpecific User\nEmail Address",
+   "options": "Contract Field\nRole\nSpecific User\nEmail Address\nClient Contact",
    "reqd": 1
   },
   {
@@ -157,7 +161,7 @@
    "fieldname": "cc_type",
    "fieldtype": "Select",
    "label": "CC Type",
-   "options": "\nContract Field\nRole\nSpecific User\nEmail Address"
+   "options": "\nContract Field\nRole\nSpecific User\nEmail Address\nClient Contact"
   },
   {
    "depends_on": "eval:doc.cc_type=='Contract Field'",
@@ -234,6 +238,12 @@
    "label": "Stop When Status"
   },
   {
+   "description": "Send even while the contract's reminders are paused (e.g. management escalations).",
+   "fieldname": "ignore_pause",
+   "fieldtype": "Check",
+   "label": "Ignore Pause"
+  },
+  {
    "fieldname": "delivery_section",
    "fieldtype": "Section Break",
    "label": "How"
@@ -273,12 +283,30 @@
    "fieldtype": "Code",
    "label": "Message Template",
    "options": "Jinja"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "arabic_section",
+   "fieldtype": "Section Break",
+   "label": "Arabic Message"
+  },
+  {
+   "fieldname": "subject_template_ar",
+   "fieldtype": "Small Text",
+   "label": "Subject Template (Arabic)"
+  },
+  {
+   "description": "Used when HC Settings > Notification Language is Arabic or English + Arabic. Empty = Arabic default.",
+   "fieldname": "message_template_ar",
+   "fieldtype": "Code",
+   "label": "Message Template (Arabic)",
+   "options": "Jinja"
   }
  ],
  "index_web_pages_for_search": 0,
  "istable": 1,
  "links": [],
- "modified": "2026-10-08 10:00:00.000000",
+ "modified": "2026-10-12 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Notification Step",

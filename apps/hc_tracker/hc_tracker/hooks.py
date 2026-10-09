@@ -43,11 +43,13 @@ setup_wizard_complete = "hc_tracker.setup.install.after_setup_wizard"
 permission_query_conditions = {
 	"HC Contract": "hc_tracker.permissions.hc_contract_query",
 	"HC Notification Log": "hc_tracker.permissions.hc_notification_log_query",
+	"HC Contact Log": "hc_tracker.permissions.hc_contact_log_query",
 }
 
 has_permission = {
 	"HC Contract": "hc_tracker.permissions.hc_contract_has_permission",
 	"HC Notification Log": "hc_tracker.permissions.hc_notification_log_has_permission",
+	"HC Contact Log": "hc_tracker.permissions.hc_contact_log_has_permission",
 }
 
 # Scheduled Tasks
