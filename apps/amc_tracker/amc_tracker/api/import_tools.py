@@ -1,4 +1,4 @@
-"""Excel templates for importing clients and AMCs with Frappe's Data Import tool."""
+"""Excel templates for importing clients, AMCs and engineers with Frappe's Data Import tool."""
 
 import io
 
@@ -44,6 +44,21 @@ TEMPLATES = {
 					("engineer", "engineer@company.qa", "One row per engineer: repeat the AMC columns empty on the extra rows."),
 					("expertise", "Routing & Switching", "An existing Expertise."),
 				],
+			)
+		],
+	},
+	"Engineer": {
+		"sheet": "Engineers",
+		"fields": [
+			("user", "engineer@company.qa", "Required: email of an existing user. The profile gives the user the AMC Engineer role."),
+			("status", "Active", "Active or Inactive."),
+			("mobile_no", "+974 3300 0000", ""),
+			("notes", "", ""),
+		],
+		"children": [
+			(
+				"expertise",
+				[("expertise", "Routing & Switching", "An existing Expertise. One row per extra area: repeat the engineer columns empty on the extra rows.")],
 			)
 		],
 	},

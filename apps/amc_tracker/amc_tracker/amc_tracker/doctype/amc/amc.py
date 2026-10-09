@@ -12,6 +12,7 @@ from amc_tracker.utils import (
 	ROLE_ENGINEER,
 	ROLE_HELPDESK,
 	get_interval_months,
+	is_active_engineer,
 	is_full_access,
 	split_list,
 	user_roles,
@@ -110,8 +111,12 @@ class AMC(Document):
 					_("Row {0}: {1} is already listed for {2}.").format(row.idx, row.engineer_name or row.engineer, row.expertise or _("this AMC"))
 				)
 			seen.add(key)
-			if row.engineer and ROLE_ENGINEER not in frappe.get_roles(row.engineer):
-				frappe.throw(_("Row {0}: {1} does not have the role {2}.").format(row.idx, row.engineer, ROLE_ENGINEER))
+			if row.engineer and (self.is_new() or row.engineer not in self._previous_engineers()) and not is_active_engineer(row.engineer):
+				frappe.throw(_("Row {0}: {1} has no active Engineer profile.").format(row.idx, row.engineer_name or row.engineer))
+
+	def _previous_engineers(self) -> set[str]:
+		before = self.get_doc_before_save()
+		return {r.engineer for r in (before.engineers if before else [])}
 
 	def set_notification_flow(self):
 		from amc_tracker.notifications.engine import get_flow_for_frequency

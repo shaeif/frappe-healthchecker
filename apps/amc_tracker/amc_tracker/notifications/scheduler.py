@@ -281,6 +281,6 @@ def send_renewal_alerts(on_date=None) -> int:
 
 @frappe.whitelist()
 def enqueue_daily_run():
-	frappe.only_for(("System Manager", "AMC Technical Manager"))
+	frappe.only_for(("System Manager", "AMC Admin"))
 	frappe.enqueue("amc_tracker.notifications.scheduler.run_daily", queue="long", timeout=1800)
 	return _("Daily job queued. Check the Notification Log in a minute.")

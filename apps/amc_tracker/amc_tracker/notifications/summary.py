@@ -211,7 +211,7 @@ def send_management_summary(on_date=None, force=False, from_date=None, to_date=N
 
 @frappe.whitelist()
 def send_summary_now(from_date: str | None = None, to_date: str | None = None):
-	frappe.only_for(("System Manager", "AMC Technical Manager"))
+	frappe.only_for(("System Manager", "AMC Admin", "AMC Technical Manager"))
 	to_date = getdate(to_date) if to_date else add_days(get_today(), -1)
 	from_date = getdate(from_date) if from_date else add_days(to_date, -6)
 	result = send_management_summary(force=True, from_date=from_date, to_date=to_date)

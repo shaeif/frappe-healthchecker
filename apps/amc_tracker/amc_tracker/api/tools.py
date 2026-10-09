@@ -7,7 +7,7 @@ from frappe.utils import get_url
 from amc_tracker.notifications import channels as ch
 from amc_tracker.utils import get_settings
 
-MANAGER_ROLES = ("System Manager", "AMC Technical Manager")
+MANAGER_ROLES = ("System Manager", "AMC Admin")
 
 
 @frappe.whitelist()

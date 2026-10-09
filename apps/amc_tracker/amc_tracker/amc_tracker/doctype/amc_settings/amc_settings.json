@@ -1,6 +1,6 @@
 {
  "actions": [],
- "creation": "2026-10-12 12:30:00.000000",
+ "creation": "2026-10-13 09:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -240,7 +240,7 @@
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-12 12:30:00.000000",
+ "modified": "2026-10-13 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "AMC Tracker",
  "name": "AMC Settings",
@@ -260,8 +260,13 @@
    "email": 1,
    "print": 1,
    "read": 1,
-   "role": "AMC Technical Manager",
+   "role": "AMC Admin",
    "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "AMC Technical Manager"
   }
  ],
  "row_format": "Dynamic",

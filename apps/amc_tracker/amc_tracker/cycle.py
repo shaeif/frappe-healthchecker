@@ -27,7 +27,6 @@ from amc_tracker.utils import (
 	CYCLE_REPORTS,
 	CYCLE_SCHEDULED,
 	CYCLE_SIGNED_OFF,
-	ROLE_ENGINEER,
 	VISIT_CANCELLED,
 	VISIT_COMPLETED,
 	VISIT_REPORTED,
@@ -38,6 +37,7 @@ from amc_tracker.utils import (
 	full_name,
 	get_interval_months,
 	get_period_label,
+	is_active_engineer,
 )
 
 
@@ -143,8 +143,8 @@ def assign_engineers(amc: str, rows) -> dict:
 		frappe.throw(_("Select at least one engineer."))
 
 	for engineer, entry in merged.items():
-		if ROLE_ENGINEER not in frappe.get_roles(engineer):
-			frappe.throw(_("{0} does not have the role {1}.").format(full_name(engineer), ROLE_ENGINEER))
+		if not is_active_engineer(engineer):
+			frappe.throw(_("{0} has no active Engineer profile.").format(full_name(engineer)))
 		for exp in entry["expertise"] or [""]:
 			on_team = (engineer, exp) in team or (not exp and any(t[0] == engineer for t in team))
 			if not on_team:

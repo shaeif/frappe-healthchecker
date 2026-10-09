@@ -3,8 +3,9 @@
 AMC Tracker manages **Annual Maintenance Contracts (AMCs)** and their periodic **preventive maintenance (PM)**:
 
 * **Clients** and their **AMCs**. One client can have several AMCs, e.g. a Network AMC and a Security AMC.
-* **Engineers by expertise.** Each AMC lists its engineers and their area of expertise (Routing & Switching,
-  Wireless, Security / Firewall, Data Center, Collaboration, or anything you add).
+* **Engineers by expertise.** Each engineer has a profile with **one or several** areas of expertise (Routing &
+  Switching, Wireless, Security / Firewall, Data Center, Collaboration, or anything you add). Each AMC lists its
+  engineers and the area each one covers.
 * **The PM cycle** (Monthly / Quarterly / Half-yearly / Yearly):
   1. The **helpdesk assigns the engineers**.
   2. **Each engineer sets their own visit date** with the client, on-site or remote.
@@ -20,8 +21,12 @@ Technical basics:
 * Time zone **Asia/Qatar**, weekend Friday–Saturday. The daily job runs at **08:00**.
 * AMC Tracker never connects to client devices and stores no device credentials.
 
-Other documents: [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) (step-by-step test with sample data) ·
-[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
+Other documents:
+
+* [`docs/LIFECYCLE.md`](docs/LIFECYCLE.md): from creating the admin, employees and clients until the due date
+  approaches, through sign-off, and how to test it;
+* [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md): step-by-step test with sample data;
+* [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
 
 ---
 
@@ -33,6 +38,7 @@ Docker Engine 23+ with the Compose v2 plugin, about 4 GB RAM:
 git clone <this repo> amc-tracker && cd amc-tracker
 ./scripts/install.sh            # local test: http://amc.localhost:8080
 ./scripts/install.sh --demo     # + sample users (one per role), clients and AMCs T-001..T-006
+./scripts/install.sh --admin-email it.admin@company.qa --admin-name "IT Admin"   # + an AMC Admin user
 ./scripts/install.sh --site amc.example.com --url https://amc.example.com --port 80   # production names
 ```
 
@@ -41,6 +47,7 @@ The script:
 * creates `.env` with random database and Administrator passwords (mode 600);
 * builds the image and starts the stack;
 * waits for the site and completes the setup wizard (Qatar, Asia/Qatar, QAR);
+* with `--admin-email`, creates that user with the **AMC Admin** role and a random password;
 * prints the URL and how to log in.
 
 Running it again is safe: the existing `.env` and site are kept. `--no-build` reuses the image already built.
@@ -80,13 +87,16 @@ docker compose exec backend bench --site amc.localhost doctor      # scheduler /
 Client  (code, name, account manager, primary contact, CC emails)
  └── AMC  (AMC-2026-0001: PM frequency, contract period, account / technical manager, scope)
       ├── Engineers table: engineer + expertise (+ lead)   <- the helpdesk maintains this
+      │     (an engineer with two areas on this AMC has two rows)
       ├── current PM cycle: next due date, cycle status, combined report, client sign-off
       ├── PM Cycle history (one row per signed-off cycle)
       └── PM Visit  (PMV-2026-00001) one per engineer per cycle
            engineer, expertise covered, visit date + time, On-site / Remote,
            visit report (or "included in the combined AMC report"), reschedule history
+Engineer  (one per user: status Active / Inactive, mobile, areas of expertise - one or several)
+ └── Engineer Leave
 Client Contact Log   calls / emails with the client, follow-up date, pause reminders
-Engineer Leave · Public Holiday · Expertise · AMC Notification Rules / Log · AMC Settings
+Public Holiday · Expertise · AMC Notification Rules / Log · AMC Settings
 ```
 
 **Cycle status** is calculated from the visits; nobody types it in:
@@ -114,32 +124,53 @@ Engineer Leave · Public Holiday · Expertise · AMC Notification Rules / Log ·
 
 ## 3. Who does what (roles)
 
-Roles created on install: **AMC Helpdesk, AMC Engineer, AMC Account Manager, AMC Technical Manager**.
+Roles created on install: **AMC Admin, AMC Technical Manager, AMC Account Manager, AMC Helpdesk, AMC Engineer**.
 
-| | Helpdesk | Engineer | Account Manager | Technical Manager / System Manager |
-|---|---|---|---|---|
-| Clients | all; create / edit contacts | only clients of their AMCs (read) | all; create / edit | all |
-| AMCs | all; **assign engineers**, pause reminders, notes | only AMCs they are on; attach combined report | all; create / edit; **sign off** | all; everything |
-| PM Visits | all; create, cancel, reopen, reassign | see visits of their AMCs, **edit only their own** (date, mode, report) | all (read) | all |
-| PM To-Do | ✔ (daily email + report) | – | ✔ | ✔ |
-| Management Summary | – | – | ✔ | ✔ |
-| Audit Trail, Settings, Notification Rules | – | – | – | ✔ |
-| Engineer Leave | all | own leave | read | all |
+| | Helpdesk | Engineer | Account Manager | Technical Manager | **AMC Admin** / System Manager |
+|---|---|---|---|---|---|
+| Clients | all; create / edit contacts | only clients of their AMCs (read) | all; create / edit | all | all |
+| AMCs | all; **assign engineers**, pause reminders, notes | only AMCs they are on; attach combined report | all; create / edit; **sign off** | all; everything | all; everything |
+| Engineer profiles | create / edit | read | read | all | all |
+| PM Visits | all; create, cancel, reopen, reassign | see visits of their AMCs, **edit only their own** (date, mode, report) | all (read) | all | all |
+| PM To-Do | ✔ (daily email + report) | – | ✔ | ✔ | ✔ |
+| Management Summary, Audit Trail | – | – | ✔ / – | ✔ | ✔ |
+| Settings | – | – | – | **read only** | ✔ edit, Test buttons |
+| **Notification Rules** | – | – | – | – (reads the log) | ✔ **only the admin** |
+| Engineer Leave | all | own leave | read | all | all |
+
+The **AMC Admin** can make every change in the app, and is the only role (with System Manager) that can create or
+change notification rules, change Settings and run the test buttons. Create one with
+`./scripts/install.sh --admin-email …`, or later with:
+```bash
+docker compose exec backend bench --site amc.localhost execute amc_tracker.setup.install.create_admin_user \
+  --kwargs '{"email": "it.admin@company.qa", "full_name": "IT Admin"}'     # no password: welcome email to set one
+```
 
 The sidebar is **role-based**: everyone only sees what they can open.
 
-* **Helpdesk:** Dashboard; Operations (Clients, AMCs, PM Visits, PM Calendar, PM To-Do, Contact Log); Reports
-  (Upcoming PM).
+* **Helpdesk:** Dashboard; Operations (Clients, AMCs, Engineers, PM Visits, PM Calendar, PM To-Do, Contact Log);
+  Reports (Upcoming PM).
 * **Engineer:** *My Work* (my visits to schedule, my next visits, my reports pending, My Leave); Operations; Upcoming PM.
-* **Managers:** additionally Management Summary, Audit Trail and **Settings**.
+* **Managers / Admin:** additionally Management Summary, Audit Trail and **Settings**.
 
 Notification rules, the notification log, engineer leave, public holidays and expertise are not on the sidebar.
-They open from **Settings > Setup**.
+They open from **Settings > Setup**. Leave is also on each Engineer profile (*Add Leave*) and on the engineer's
+*My Work* page.
+
+**Engineers.** Any user can be an engineer, including a helpdesk or manager user who also does visits:
+
+* Create an **Engineer** profile: **Operations > Engineers > + Add**, then pick the user and add one or several
+  areas of expertise.
+* Saving the profile gives the user the **AMC Engineer** role.
+* Set the profile **Inactive** when the person stops doing PM. Their history stays, but they can no longer be
+  assigned.
+* In an AMC's Engineers table and in *Assign Engineers*, only active engineers are offered. Picking an engineer fills
+  in their areas.
 
 Add users:
 ```bash
 docker compose exec backend bench --site amc.localhost add-user omar@company.qa --first-name Omar --last-name Engineer \
-  --user-type "System User" --add-role "AMC Engineer" --password 'Choose-A-Strong-One'
+  --user-type "System User" --password 'Choose-A-Strong-One'     # then create his Engineer profile
 docker compose exec backend bench --site amc.localhost execute amc_tracker.setup.install.add_roles \
   --kwargs '{"user": "omar@company.qa", "roles": "AMC Engineer,AMC Helpdesk"}'
 ```
@@ -184,7 +215,7 @@ Moving the due date of a cycle that already has visits is blocked. Sign it off, 
 
 ---
 
-## 5. Notifications (Settings > Setup > Notification Rules)
+## 5. Notifications (Settings > Setup > Notification Rules – AMC Admin only)
 
 There is one rule set per PM frequency: *Standard PM Notifications - Monthly / Quarterly / Half-yearly / Yearly*, and a
 default for *All*. Day values differ by frequency; this table uses the Quarterly values.
@@ -272,9 +303,10 @@ Emails go through the **Email Queue** (sent by the `queue-short` / `queue-long` 
 
 ---
 
-## 7. Settings (sidebar > Settings, Technical Manager)
+## 7. Settings (sidebar > Settings: AMC Admin edits, Technical Manager reads)
 
-* **Setup** tiles open Notification Rules, Notification Log, Engineer Leave, Public Holidays, Expertise and Users.
+* **Setup** tiles open Engineers, Notification Rules (admin only), Notification Log, Engineer Leave, Public
+  Holidays, Expertise and Users.
 
 | Field | Meaning |
 |---|---|
@@ -292,7 +324,7 @@ Emails go through the **Email Queue** (sent by the `queue-short` / `queue-long` 
 | Notification Language | English, Arabic, or English + Arabic in one email |
 
 **Test** buttons: *Send Test Email*, *Send Test Teams Card*, *Send Test Pop-up To Me*, *Send PM To-Do Now*,
-*Send Management Summary Now*, *Run Daily Job Now*.
+*Send Management Summary Now*, *Run Daily Job Now* (shown to the AMC Admin / System Manager).
 
 ---
 
@@ -325,7 +357,9 @@ Emails go through the **Email Queue** (sent by the `queue-short` / `queue-long` 
 * **Client** list > **Import > Download Excel Template**, fill the *Clients* sheet, then **Import > Import from Excel**.
 * **AMC** list: same. The *AMCs* sheet has the AMC columns plus *Engineer (Engineers)* / *Expertise (Engineers)*.
   For an AMC with several engineers, add one row per extra engineer and leave the AMC columns empty on those rows.
-* Import is for Technical Managers and System Managers (Data Import permission is granted on install).
+* **Engineer** list: same (*Engineers* sheet: user, status, mobile, *Expertise (Areas of Expertise)*). For an engineer
+  with several areas, add one row per extra area and leave the other columns empty.
+* Import is for the AMC Admin, Technical Managers and System Managers (Data Import permission is granted on install).
 
 ---
 
@@ -410,17 +444,17 @@ amc-tracker/
 ├── Dockerfile                       # FROM frappe/erpnext:v16 + apps/amc_tracker
 ├── docker-compose.yml               # backend, configurator, create-site, db, frontend, queues, redis, scheduler, websocket
 ├── docker-compose.apparmor.yml      # optional override for hosts with AppArmor (see TROUBLESHOOTING)
-├── docs/ TEST_PLAN.md · TROUBLESHOOTING.md
+├── docs/ LIFECYCLE.md · TEST_PLAN.md · TROUBLESHOOTING.md
 ├── scripts/ install.sh · backup.sh · restore.sh
 └── apps/amc_tracker/amc_tracker/
     ├── hooks.py · permissions.py · utils.py · cycle.py (PM cycle: assign, status, sign-off) · scheduling.py
     ├── api/            calendar · scheduling_email · import_tools · metrics · number_cards · queries · tools
     ├── notifications/  engine · channels · templates (EN + AR) · scheduler · pm_todo · summary
-    ├── setup/          install · default_flows · demo
+    ├── setup/          install · default_flows · demo · lifecycle (timeline preview + walkthrough)
     ├── public/js/      amc_tracker_popup.js · amc_tracker_ui.js (shared dialogs)
     ├── translations/   ar.csv
     └── amc_tracker/    module "AMC Tracker"
-        ├── doctype/    client · amc · amc_engineer · expertise · pm_visit · pm_visit_expertise · pm_cycle ·
+        ├── doctype/    client · amc · amc_engineer · engineer · engineer_expertise · expertise · pm_visit · pm_visit_expertise · pm_cycle ·
         │               pm_reschedule · client_contact_log · engineer_leave · public_holiday ·
         │               amc_notification_flow · amc_notification_step · amc_notification_log · amc_settings
         ├── report/     upcoming_pm · pm_to_do · amc_management_summary · amc_audit_trail

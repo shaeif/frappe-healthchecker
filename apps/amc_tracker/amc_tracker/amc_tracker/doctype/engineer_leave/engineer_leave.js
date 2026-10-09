@@ -3,10 +3,7 @@
 
 frappe.ui.form.on("Engineer Leave", {
 	setup(frm) {
-		frm.set_query("engineer", () => ({
-			query: "amc_tracker.api.queries.users_with_role",
-			filters: { role: "AMC Engineer" },
-		}));
+		frm.set_query("engineer", () => ({ filters: { status: "Active" } }));
 	},
 	onload(frm) {
 		if (frm.is_new() && !frm.doc.engineer && frappe.user.has_role("AMC Engineer")) {

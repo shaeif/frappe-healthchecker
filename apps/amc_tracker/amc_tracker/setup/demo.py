@@ -15,16 +15,25 @@ TEST_DOMAIN = "amc.test"
 
 TEST_USERS = [
 	# (email, full name, roles)
+	(f"admin@{TEST_DOMAIN}", "Amal Admin", ["AMC Admin"]),
 	(f"helpdesk@{TEST_DOMAIN}", "Hana Helpdesk", ["AMC Helpdesk"]),
-	(f"eng1@{TEST_DOMAIN}", "Omar Engineer", ["AMC Engineer"]),  # Routing & Switching
-	(f"eng2@{TEST_DOMAIN}", "Sara Engineer", ["AMC Engineer"]),  # Security / Firewall
-	(f"eng3@{TEST_DOMAIN}", "Yousef Engineer", ["AMC Engineer"]),  # Wireless
-	(f"eng4@{TEST_DOMAIN}", "Mariam Engineer", ["AMC Engineer"]),  # Data Center + Collaboration
+	(f"eng1@{TEST_DOMAIN}", "Omar Engineer", []),
+	(f"eng2@{TEST_DOMAIN}", "Sara Engineer", []),
+	(f"eng3@{TEST_DOMAIN}", "Yousef Engineer", []),
+	(f"eng4@{TEST_DOMAIN}", "Mariam Engineer", []),
 	(f"am@{TEST_DOMAIN}", "Ali AccountManager", ["AMC Account Manager"]),
 	(f"tm@{TEST_DOMAIN}", "Tariq TechManager", ["AMC Technical Manager"]),
 ]
 
 RS, WL, SEC, DC, COLLAB = "Routing & Switching", "Wireless", "Security / Firewall", "Data Center", "Collaboration"
+
+# Engineer profiles (the profile gives the user the AMC Engineer role). An engineer can have several areas.
+ENGINEERS = {
+	"eng1": [RS, WL],
+	"eng2": [SEC],
+	"eng3": [WL],
+	"eng4": [DC, COLLAB],
+}
 
 
 def _u(name):
@@ -52,10 +61,25 @@ def create_test_users(password: str):
 			)
 			user.insert(ignore_permissions=True)
 			created.append(email)
-		user.add_roles(*roles)
+		if roles:
+			user.add_roles(*roles)
 		update_password(email, password)
+	create_engineer_profiles()
 	frappe.db.commit()
 	return {"created": created, "users": [u[0] for u in TEST_USERS]}
+
+
+def create_engineer_profiles():
+	for name, areas in ENGINEERS.items():
+		email = _u(name)
+		if not frappe.db.exists("User", email):
+			continue
+		doc = frappe.get_doc("Engineer", email) if frappe.db.exists("Engineer", email) else frappe.new_doc("Engineer")
+		doc.user = email
+		doc.status = "Active"
+		doc.mobile_no = f"+974 3300 00{name[-1]}0"
+		doc.set("expertise", [{"expertise": a} for a in areas])
+		doc.save(ignore_permissions=True)
 
 
 CLIENTS = [
@@ -164,6 +188,8 @@ def delete_test_data(keep_users: bool = False):
 	if not keep_users:
 		for email, _name, _roles in TEST_USERS:
 			frappe.db.delete("Engineer Leave", {"engineer": email})
+			if frappe.db.exists("Engineer", email):
+				frappe.delete_doc("Engineer", email, force=True, ignore_permissions=True)
 			if frappe.db.exists("User", email):
 				frappe.delete_doc("User", email, force=True, ignore_permissions=True)
 	frappe.db.commit()

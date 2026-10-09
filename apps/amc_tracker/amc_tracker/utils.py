@@ -29,20 +29,23 @@ VISIT_REPORTED = "Report submitted"
 VISIT_CANCELLED = "Cancelled"
 VISIT_OPEN = (VISIT_TO_SCHEDULE, VISIT_SCHEDULED, VISIT_COMPLETED)
 
+ROLE_ADMIN = "AMC Admin"
 ROLE_HELPDESK = "AMC Helpdesk"
 ROLE_ENGINEER = "AMC Engineer"
 ROLE_ACCOUNT_MANAGER = "AMC Account Manager"
 ROLE_TECHNICAL_MANAGER = "AMC Technical Manager"
-AMC_ROLES = [ROLE_HELPDESK, ROLE_ENGINEER, ROLE_ACCOUNT_MANAGER, ROLE_TECHNICAL_MANAGER]
+AMC_ROLES = [ROLE_ADMIN, ROLE_HELPDESK, ROLE_ENGINEER, ROLE_ACCOUNT_MANAGER, ROLE_TECHNICAL_MANAGER]
 
-# Roles with unrestricted access to clients, AMCs, notification rules and settings
-FULL_ACCESS_ROLES = {"System Manager", ROLE_TECHNICAL_MANAGER}
+# Only these control the notification rules and AMC Settings
+NOTIFICATION_ADMIN_ROLES = ("System Manager", ROLE_ADMIN)
+# Roles with unrestricted access to clients, AMCs and visits
+FULL_ACCESS_ROLES = {"System Manager", ROLE_ADMIN, ROLE_TECHNICAL_MANAGER}
 # Roles that see every client / AMC / visit (engineers only see the AMCs they are assigned to)
 SEE_ALL_ROLES = FULL_ACCESS_ROLES | {ROLE_HELPDESK, ROLE_ACCOUNT_MANAGER}
 # Roles allowed to sign off a PM cycle
-SIGN_OFF_ROLES = {"System Manager", ROLE_TECHNICAL_MANAGER, ROLE_ACCOUNT_MANAGER}
+SIGN_OFF_ROLES = {"System Manager", ROLE_ADMIN, ROLE_TECHNICAL_MANAGER, ROLE_ACCOUNT_MANAGER}
 # Roles that assign engineers to an AMC / PM cycle
-ASSIGN_ROLES = {"System Manager", ROLE_TECHNICAL_MANAGER, ROLE_HELPDESK}
+ASSIGN_ROLES = {"System Manager", ROLE_ADMIN, ROLE_TECHNICAL_MANAGER, ROLE_HELPDESK}
 
 # User (Link) fields of AMC that a notification step may target ("AMC Field" recipient type)
 AMC_USER_FIELDS = ["account_manager", "technical_manager", "helpdesk_contact"]
@@ -115,6 +118,11 @@ def full_name(user: str | None) -> str:
 	if not user:
 		return ""
 	return frappe.db.get_value("User", user, "full_name") or user
+
+
+def is_active_engineer(engineer: str | None) -> bool:
+	"""True when `engineer` (a user ID) has an active Engineer profile."""
+	return bool(engineer) and frappe.db.get_value("Engineer", engineer, "status") == "Active"
 
 
 def popups_enabled() -> bool:

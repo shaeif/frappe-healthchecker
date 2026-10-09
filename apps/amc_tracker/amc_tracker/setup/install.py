@@ -29,7 +29,8 @@ def after_install():
 	create_default_expertise()
 	create_default_flows()
 	seed_qatar_holidays()
-	grant_data_import_permission()
+	for role in ("AMC Admin", "AMC Technical Manager"):
+		grant_data_import_permission(role)
 	frappe.db.commit()
 
 
@@ -38,7 +39,8 @@ def after_migrate():
 	setup_settings()
 	create_default_expertise(only_if_none_exist=True)
 	create_default_flows(only_if_none_exist=True)
-	grant_data_import_permission()
+	for role in ("AMC Admin", "AMC Technical Manager"):
+		grant_data_import_permission(role)
 
 
 def after_setup_wizard(args=None):
@@ -84,6 +86,34 @@ def create_default_expertise(only_if_none_exist: bool = False):
 	for name in DEFAULT_EXPERTISE:
 		if not frappe.db.exists("Expertise", name):
 			frappe.get_doc({"doctype": "Expertise", "expertise_name": name, "enabled": 1}).insert(ignore_permissions=True)
+
+
+def create_admin_user(email: str, full_name: str = "AMC Admin", password: str | None = None) -> str:
+	"""Create (or update) a user with the AMC Admin role: full control, including notification rules and settings.
+
+	bench --site <site> execute amc_tracker.setup.install.create_admin_user \
+	    --kwargs '{"email": "it.admin@company.qa", "full_name": "IT Admin", "password": "..."}'
+	"""
+	from frappe.utils.password import update_password
+
+	email = (email or "").strip().lower()
+	if not email:
+		frappe.throw("Pass an email address")
+	if frappe.db.exists("User", email):
+		user = frappe.get_doc("User", email)
+	else:
+		first, _sep, last = (full_name or "AMC Admin").partition(" ")
+		user = frappe.new_doc("User")
+		user.update(
+			{"email": email, "first_name": first, "last_name": last, "send_welcome_email": 0 if password else 1,
+				"user_type": "System User", "time_zone": TIME_ZONE}
+		)
+		user.insert(ignore_permissions=True)
+	user.add_roles("AMC Admin")
+	if password:
+		update_password(email, password)
+	frappe.db.commit()
+	return email
 
 
 def add_roles(user: str, roles):

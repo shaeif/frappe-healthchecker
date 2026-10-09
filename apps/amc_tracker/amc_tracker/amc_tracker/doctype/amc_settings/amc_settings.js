@@ -4,6 +4,7 @@
 const AMC_SETUP_TILES = [
 	{ label: "Notification Rules", doctype: "AMC Notification Flow", icon: "bell-ring", help: "Who is notified, when and how" },
 	{ label: "Notification Log", doctype: "AMC Notification Log", icon: "mail-check", help: "Every email, Teams card and pop-up sent" },
+	{ label: "Engineers", doctype: "Engineer", icon: "hard-hat", help: "Engineer profiles and their expertise" },
 	{ label: "Engineer Leave", doctype: "Engineer Leave", icon: "plane", help: "Engineer availability for visit dates" },
 	{ label: "Public Holidays", doctype: "Public Holiday", icon: "calendar-x", help: "Non-working days (add Eid dates yearly)" },
 	{ label: "Expertise", doctype: "Expertise", icon: "graduation-cap", help: "Areas of expertise of the engineers" },
@@ -13,7 +14,11 @@ const AMC_SETUP_TILES = [
 frappe.ui.form.on("AMC Settings", {
 	refresh(frm) {
 		amc_settings.render_setup(frm);
-		amc_settings.test_buttons(frm);
+		if (amc_tracker.is_admin()) {
+			amc_settings.test_buttons(frm);
+		} else {
+			frm.set_intro(__("Only the AMC Admin can change these settings and the notification rules."), "blue");
+		}
 	},
 });
 

@@ -215,5 +215,5 @@ def send_pm_todo(on_date=None, force=False) -> str:
 
 @frappe.whitelist()
 def send_todo_now():
-	frappe.only_for(("System Manager", "AMC Technical Manager", "AMC Helpdesk"))
+	frappe.only_for(("System Manager", "AMC Admin", "AMC Technical Manager", "AMC Helpdesk"))
 	return _("PM to-do: {0}").format(send_pm_todo(force=True))

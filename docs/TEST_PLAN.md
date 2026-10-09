@@ -22,12 +22,13 @@ b execute amc_tracker.setup.demo.configure_test_settings   # Skip Weekends OFF s
 b execute amc_tracker.setup.demo.create_test_data
 ```
 
-Users (one per role, four engineers):
+Users (one per role, four engineers). The engineers get the *AMC Engineer* role from their **Engineer profile**:
 
-| User | Role | Expertise in the demo |
+| User | Role | Engineer profile: areas of expertise |
 |---|---|---|
+| admin@amc.test (Amal) | **AMC Admin** | – |
 | helpdesk@amc.test | AMC Helpdesk | – |
-| eng1@amc.test (Omar) | AMC Engineer | Routing & Switching |
+| eng1@amc.test (Omar) | AMC Engineer | Routing & Switching + Wireless |
 | eng2@amc.test (Sara) | AMC Engineer | Security / Firewall |
 | eng3@amc.test (Yousef) | AMC Engineer | Wireless |
 | eng4@amc.test (Mariam) | AMC Engineer | Data Center + Collaboration |
@@ -38,7 +39,7 @@ Clients and AMCs:
 
 | Client | AMC | PM frequency | Due | State after creation |
 |---|---|---|---|---|
-| T-001 Al Noor Trading | Network AMC (eng1 R&S, eng3 Wireless) | Monthly | D+7 | Not started |
+| T-001 Al Noor Trading | Network AMC (eng1 Routing & Switching, eng3 Wireless) | Monthly | D+7 | Not started |
 | T-002 Doha Logistics | Security AMC (eng2) | Quarterly | D+20 | Engineers assigned, no date |
 | T-003 Pearl Hospitality | Network & Security AMC (eng1, eng2) | Half-yearly | D−3 (**overdue**) | eng1 visited D−6 without report; eng2 (remote) no date |
 | T-004 Lusail Engineering | Data Center AMC (eng4) | Yearly | D+90 | Not started; **contract ends D+45** |
@@ -54,15 +55,30 @@ Optional: create the Office 365 Email Account (README §6) and use *Settings > T
 Log in as each user and check the sidebar:
 
 * **helpdesk@**:
-  * sidebar: Dashboard; Operations (Clients, AMCs, PM Visits, PM Calendar, PM To-Do, Contact Log); Reports (Upcoming PM);
+  * sidebar: Dashboard; Operations (Clients, AMCs, Engineers, PM Visits, PM Calendar, PM To-Do, Contact Log); Reports
+    (Upcoming PM);
   * **no** Settings, Notification Rules / Log, Engineer Leave or Holidays;
   * the Dashboard shows 8 cards (PM Due This Month, Overdue = 1, Engineers To Assign…).
 * **eng2@**:
   * sidebar: *My Work* (My Visits To Schedule = 2, My Visits Next 7 Days, My Reports Pending), Operations
     without PM To-Do, Upcoming PM;
   * **AMCs** lists only T-002 and T-003; **Clients** only T-002 and T-003.
-* **tm@**: everything, plus Management Summary, Audit Trail and **Settings**. Settings > *Setup* shows tiles for
-  Notification Rules, Notification Log, Engineer Leave, Public Holidays, Expertise and Users.
+* **tm@**: everything, plus Management Summary, Audit Trail and **Settings**, but Settings is **read-only**:
+  * no Test buttons; the intro says "Only the AMC Admin can change these settings and the notification rules.";
+  * *Setup* shows Engineers, Notification Log, Engineer Leave, Public Holidays, Expertise and Users, **but no
+    Notification Rules**; `/desk/amc-notification-flow` is refused.
+* **admin@** (AMC Admin): everything; Settings is editable with the Test buttons, and *Setup* includes
+  **Notification Rules**. Only this role and System Manager can create or change rules.
+
+### 1.1 Engineer profiles (admin@)
+
+1. *Operations > Engineers*: four profiles, all *Active*; eng1 has two areas.
+2. **+ Add Engineer** for a new user with two areas (e.g. *Data Center* + *Wireless*). Save: the user now has the
+   *AMC Engineer* role and *My Work* in the sidebar.
+3. Open T-006's AMC, add a row in **Engineers** and pick eng1. The row's expertise becomes *Routing & Switching*, and
+   a second row with *Wireless* is added. The expertise list in those rows offers only eng1's areas. Discard.
+4. Set eng3's profile **Inactive**. eng3 is no longer offered in an AMC's Engineers table or in *Assign Engineers*.
+   Assigning eng3 through the API gives "Yousef Engineer has no active Engineer profile." Set eng3 back to Active.
 
 ## 2. Daily run
 
@@ -169,7 +185,7 @@ Run it again: nothing new is sent (rule 8 repeats only the next day).
   * Completed per Month, On-time vs Late and Avg Days fill after the first sign-off;
   * Due per Month and Visits per Engineer fill immediately.
 
-## 9. Notification rules
+## 9. Notification rules (admin@)
 
 * **Settings > Notification Rules > Standard PM Notifications - Quarterly > Test Rules**: pick T-005 and D. The dry
   run lists every rule, the visit it applies to, recipients, channels and "Would send today", and sends nothing.
@@ -177,8 +193,14 @@ Run it again: nothing new is sent (rule 8 repeats only the next day).
 * Add a rule with recipient *Visit Engineer* and trigger *Days before due date*. Saving is refused (it needs a visit
   trigger).
 * Enable rule 11 *Client - visit confirmation*, then set a visit date. The client gets a confirmation email.
+* As **tm@** or **helpdesk@**, the rule set cannot be opened or changed, and *Test Rules* / *Run Daily Job Now*
+  are refused.
+* The full timeline of one AMC from the command line (sends nothing):
+  `b execute amc_tracker.setup.lifecycle.preview_timeline --kwargs '{"amc": "<AMC name>"}'`.
+* The complete lifecycle on simulated dates, from creating the engineers to sign-off, is in
+  [`LIFECYCLE.md`](LIFECYCLE.md) §9: `b execute amc_tracker.setup.lifecycle.run_walkthrough`.
 
-## 10. Excel import (tm@)
+## 10. Excel import (tm@ or admin@)
 
 * **Client** list > **Import > Download Excel Template**. Add `T-101, Imported Client`, then **Import from Excel** >
   *Start Import*.
@@ -187,6 +209,8 @@ Run it again: nothing new is sent (rule 8 repeats only the next day).
   * row 2: only `eng2@amc.test | Security / Firewall`.
   
   Import: one AMC with two engineers.
+* **Engineer** list > template: row 1 `<existing user email> | Active | | | Routing & Switching`, row 2 only
+  `Wireless`. Import: one engineer profile with two areas, and the user gets the *AMC Engineer* role.
 
 ## 11. Arabic
 
@@ -213,6 +237,7 @@ b execute amc_tracker.setup.demo.delete_test_data
 
 ```bash
 b set-config allow_tests true
-b run-tests --app amc_tracker     # 7 tests: rule sets, assign -> one visit per engineer, cycle status + combined
-                                  # report + sign-off roll-over, reschedule history, idempotent daily run, rule validation
+b run-tests --app amc_tracker     # 9 tests: rule sets, assign -> one visit per engineer, cycle status + combined
+                                  # report + sign-off roll-over, reschedule history, idempotent daily run, rule validation,
+                                  # engineer profiles (role, several areas, inactive), only the admin controls the rules
 ```

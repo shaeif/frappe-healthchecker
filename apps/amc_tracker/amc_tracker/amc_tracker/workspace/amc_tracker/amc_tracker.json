@@ -21,7 +21,7 @@
    "label": "Avg Days vs Due Date"
   }
  ],
- "content": "[{\"id\": \"h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"nc1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"PM Due This Month\", \"col\": 3}}, {\"id\": \"nc2\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Overdue\", \"col\": 3}}, {\"id\": \"nc3\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Engineers To Assign\", \"col\": 3}}, {\"id\": \"nc4\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Visits To Schedule\", \"col\": 3}}, {\"id\": \"nc5\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Visits This Week\", \"col\": 3}}, {\"id\": \"nc6\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Reports Pending\", \"col\": 3}}, {\"id\": \"nc7\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Awaiting Sign-off\", \"col\": 3}}, {\"id\": \"nc8\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Follow-ups Due Today\", \"col\": 3}}, {\"id\": \"h9\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc10\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"PM To-Do\", \"col\": 3}}, {\"id\": \"sc11\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"PM Calendar\", \"col\": 3}}, {\"id\": \"sc12\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Clients\", \"col\": 3}}, {\"id\": \"sc13\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"AMCs\", \"col\": 3}}, {\"id\": \"sc14\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"PM Visits\", \"col\": 3}}, {\"id\": \"sc15\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Contact Log\", \"col\": 3}}, {\"id\": \"sc16\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Upcoming PM\", \"col\": 3}}, {\"id\": \"sc17\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Management Summary\", \"col\": 3}}, {\"id\": \"h18\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Performance</b></span>\", \"col\": 12}}, {\"id\": \"ch19\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Completed per Month\", \"col\": 6}}, {\"id\": \"ch20\", \"type\": \"chart\", \"data\": {\"chart_name\": \"On-time vs Late\", \"col\": 6}}, {\"id\": \"ch21\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Due per Month\", \"col\": 6}}, {\"id\": \"ch22\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Visits per Engineer\", \"col\": 6}}, {\"id\": \"ch23\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Avg Days vs Due Date\", \"col\": 6}}]",
+ "content": "[{\"id\": \"h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"nc1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"PM Due This Month\", \"col\": 3}}, {\"id\": \"nc2\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Overdue\", \"col\": 3}}, {\"id\": \"nc3\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Engineers To Assign\", \"col\": 3}}, {\"id\": \"nc4\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Visits To Schedule\", \"col\": 3}}, {\"id\": \"nc5\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Visits This Week\", \"col\": 3}}, {\"id\": \"nc6\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Reports Pending\", \"col\": 3}}, {\"id\": \"nc7\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Awaiting Sign-off\", \"col\": 3}}, {\"id\": \"nc8\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Follow-ups Due Today\", \"col\": 3}}, {\"id\": \"h9\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc10\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"PM To-Do\", \"col\": 3}}, {\"id\": \"sc11\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"PM Calendar\", \"col\": 3}}, {\"id\": \"sc12\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Clients\", \"col\": 3}}, {\"id\": \"sc13\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"AMCs\", \"col\": 3}}, {\"id\": \"sc_eng\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineers\", \"col\": 3}}, {\"id\": \"sc14\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"PM Visits\", \"col\": 3}}, {\"id\": \"sc15\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Contact Log\", \"col\": 3}}, {\"id\": \"sc16\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Upcoming PM\", \"col\": 3}}, {\"id\": \"sc17\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Management Summary\", \"col\": 3}}, {\"id\": \"h18\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Performance</b></span>\", \"col\": 12}}, {\"id\": \"ch19\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Completed per Month\", \"col\": 6}}, {\"id\": \"ch20\", \"type\": \"chart\", \"data\": {\"chart_name\": \"On-time vs Late\", \"col\": 6}}, {\"id\": \"ch21\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Due per Month\", \"col\": 6}}, {\"id\": \"ch22\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Visits per Engineer\", \"col\": 6}}, {\"id\": \"ch23\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Avg Days vs Due Date\", \"col\": 6}}]",
  "creation": "2026-10-12 12:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -33,7 +33,7 @@
  "is_hidden": 0,
  "label": "AMC Tracker",
  "links": [],
- "modified": "2026-10-12 12:00:00.000000",
+ "modified": "2026-10-13 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "AMC Tracker",
  "name": "AMC Tracker",
@@ -81,6 +81,9 @@
    "role": "System Manager"
   },
   {
+   "role": "AMC Admin"
+  },
+  {
    "role": "AMC Technical Manager"
   },
   {
@@ -118,6 +121,12 @@
    "label": "AMCs",
    "link_to": "AMC",
    "stats_filter": "[[\"AMC\",\"status\",\"=\",\"Active\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "label": "Engineers",
+   "link_to": "Engineer",
    "type": "DocType"
   },
   {

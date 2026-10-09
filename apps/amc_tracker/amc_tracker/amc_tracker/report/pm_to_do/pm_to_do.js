@@ -22,7 +22,7 @@ frappe.query_reports["PM To-Do"] = {
 		},
 	],
 	onload(report) {
-		if (frappe.user.has_role(["AMC Helpdesk", "AMC Technical Manager", "System Manager"])) {
+		if (frappe.user.has_role(["AMC Helpdesk", "AMC Technical Manager", "AMC Admin", "System Manager"])) {
 			report.page.add_inner_button(__("Email To-Do Now"), () =>
 				frappe.xcall("amc_tracker.notifications.pm_todo.send_todo_now").then((msg) => frappe.msgprint(msg))
 			);

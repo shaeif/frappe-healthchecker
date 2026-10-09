@@ -931,7 +931,7 @@ def render_rows_html(rows, title_html: str, dry_run: bool) -> str:
 @frappe.whitelist()
 def dry_run(flow: str, amc: str, on_date: str | None = None) -> dict:
 	"""Show which rules of `flow` would fire for `amc` on `on_date`, without sending."""
-	frappe.only_for(("System Manager", "AMC Technical Manager"))
+	frappe.only_for(("System Manager", "AMC Admin"))
 	flow_doc = frappe.get_doc("AMC Notification Flow", flow)
 	amc_doc = frappe.get_doc("AMC", amc)
 	on_date = get_today(on_date)

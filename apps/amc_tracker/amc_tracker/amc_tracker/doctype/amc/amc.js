@@ -7,8 +7,12 @@ frappe.ui.form.on("AMC", {
 		frm.set_query("account_manager", by_role("AMC Account Manager"));
 		frm.set_query("technical_manager", by_role("AMC Technical Manager"));
 		frm.set_query("helpdesk_contact", by_role("AMC Helpdesk"));
-		frm.set_query("engineer", "engineers", by_role("AMC Engineer"));
-		frm.set_query("expertise", "engineers", () => ({ filters: { enabled: 1 } }));
+		frm.set_query("engineer", "engineers", amc_tracker.engineer_query);
+		frm.set_query("expertise", "engineers", (doc, cdt, cdn) => {
+			const row = locals[cdt][cdn];
+			const known = (frm.__expertise && frm.__expertise[row.engineer]) || [];
+			return { filters: known.length ? { name: ["in", known] } : { enabled: 1 } };
+		});
 		frm.set_query("notification_flow", () => ({
 			filters: { enabled: 1, applies_to_frequency: ["in", ["All", frm.doc.frequency || "All"]] },
 		}));
@@ -172,7 +176,7 @@ const amc_form = {
 					in_place_edit: true,
 					data: team.map((r) => ({ engineer: r.engineer, expertise: r.expertise, visit_mode: "On-site" })),
 					fields: [
-						{ fieldname: "engineer", fieldtype: "Link", options: "User", label: __("Engineer"), in_list_view: 1, reqd: 1, columns: 4, get_query: amc_tracker.engineer_query },
+						{ fieldname: "engineer", fieldtype: "Link", options: "Engineer", label: __("Engineer"), in_list_view: 1, reqd: 1, columns: 4, get_query: amc_tracker.engineer_query },
 						{ fieldname: "expertise", fieldtype: "Link", options: "Expertise", label: __("Expertise"), in_list_view: 1, columns: 3 },
 						{ fieldname: "visit_mode", fieldtype: "Select", options: "On-site\nRemote", label: __("Visit Mode"), in_list_view: 1, default: "On-site", columns: 2 },
 					],
@@ -220,7 +224,23 @@ const amc_form = {
 };
 
 frappe.ui.form.on("AMC Engineer", {
-	engineers_add(frm, cdt, cdn) {
-		// nothing to default; kept for future use
+	// Picking an engineer fills their expertise: one row per area they have (delete the ones not needed)
+	engineer(frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		if (!row.engineer) return;
+		amc_tracker.expertise_of(row.engineer).then((list) => {
+			frm.__expertise = frm.__expertise || {};
+			frm.__expertise[row.engineer] = list;
+			if (!list.length || row.expertise) return;
+			const taken = new Set((frm.doc.engineers || []).filter((r) => r.engineer === row.engineer && r.expertise).map((r) => r.expertise));
+			const todo = list.filter((x) => !taken.has(x));
+			if (!todo.length) return;
+			frappe.model.set_value(cdt, cdn, "expertise", todo[0]);
+			todo.slice(1).forEach((x) => {
+				const extra = frm.add_child("engineers", { engineer: row.engineer, expertise: x });
+				frappe.model.set_value(extra.doctype, extra.name, "engineer_name", row.engineer_name);
+			});
+			frm.refresh_field("engineers");
+		});
 	},
 });

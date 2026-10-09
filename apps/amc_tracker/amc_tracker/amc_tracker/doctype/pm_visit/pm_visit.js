@@ -5,10 +5,18 @@ frappe.ui.form.on("PM Visit", {
 	setup(frm) {
 		frm.set_query("engineer", amc_tracker.engineer_query);
 		frm.set_query("amc", () => ({ filters: { status: "Active" } }));
-		frm.set_query("expertise_covered", () => ({ filters: { enabled: 1 } }));
+		frm.set_query("expertise_covered", () => {
+			const known = frm.__expertise || [];
+			return { filters: known.length ? { name: ["in", known] } : { enabled: 1 } };
+		});
+	},
+
+	engineer(frm) {
+		amc_tracker.expertise_of(frm.doc.engineer).then((list) => (frm.__expertise = list));
 	},
 
 	refresh(frm) {
+		amc_tracker.expertise_of(frm.doc.engineer).then((list) => (frm.__expertise = list));
 		pm_visit_form.banner(frm);
 		pm_visit_form.buttons(frm);
 		frm.toggle_enable(["amc", "engineer"], frm.is_new() || amc_tracker.is_helpdesk());

@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "field:flow_name",
- "creation": "2026-10-12 12:30:00.000000",
+ "creation": "2026-10-13 09:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -71,7 +71,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-12 12:30:00.000000",
+ "modified": "2026-10-13 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "AMC Tracker",
  "name": "AMC Notification Flow",
@@ -98,7 +98,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "AMC Technical Manager",
+   "role": "AMC Admin",
    "share": 1,
    "write": 1
   }

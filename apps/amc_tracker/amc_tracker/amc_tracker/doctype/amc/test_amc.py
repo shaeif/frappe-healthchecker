@@ -15,12 +15,18 @@ IGNORE_TEST_RECORD_DEPENDENCIES = ["User", "AMC Notification Flow", "Client", "E
 ENG1, ENG2 = "amc.test.eng1@example.com", "amc.test.eng2@example.com"
 
 
-def ensure_engineer(email, first_name):
+def ensure_engineer(email, first_name, expertise=()):
 	if not frappe.db.exists("User", email):
 		frappe.get_doc(
 			{"doctype": "User", "email": email, "first_name": first_name, "send_welcome_email": 0, "user_type": "System User"}
 		).insert(ignore_permissions=True)
-	frappe.get_doc("User", email).add_roles("AMC Engineer")
+	for name in ("Routing & Switching", "Security / Firewall"):
+		if not frappe.db.exists("Expertise", name):
+			frappe.get_doc({"doctype": "Expertise", "expertise_name": name}).insert(ignore_permissions=True)
+	if not frappe.db.exists("Engineer", email):
+		frappe.get_doc(
+			{"doctype": "Engineer", "user": email, "expertise": [{"expertise": x} for x in expertise]}
+		).insert(ignore_permissions=True)
 
 
 def make_amc(code, frequency="Quarterly", due_in_days=30, **kwargs):
@@ -52,8 +58,8 @@ class IntegrationTestAMC(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		ensure_engineer(ENG1, "Test Eng One")
-		ensure_engineer(ENG2, "Test Eng Two")
+		ensure_engineer(ENG1, "Test Eng One", ["Routing & Switching", "Security / Firewall"])
+		ensure_engineer(ENG2, "Test Eng Two", ["Security / Firewall"])
 
 	def test_interval_title_and_period_label(self):
 		doc = make_amc("TST-PL", "Half-yearly")
@@ -128,6 +134,25 @@ class IntegrationTestAMC(IntegrationTestCase):
 		self.assertEqual(len(amc.cycles), 1)
 		self.assertEqual(amc.cycles[0].period_label, result["cycle"])
 		self.assertEqual(amc.cycles[0].completed_on, getdate(add_days(today(), 3)))
+
+	def test_engineer_profile_grants_role_and_holds_several_areas(self):
+		self.assertIn("AMC Engineer", frappe.get_roles(ENG1))
+		areas = frappe.get_all("Engineer Expertise", filters={"parent": ENG1}, pluck="expertise")
+		self.assertEqual(set(areas), {"Routing & Switching", "Security / Firewall"})
+		# an inactive engineer cannot be assigned
+		doc = make_amc("TST-IN")
+		frappe.db.set_value("Engineer", ENG2, "status", "Inactive")
+		try:
+			self.assertRaises(frappe.ValidationError, assign_engineers, doc.name, [{"engineer": ENG2}])
+		finally:
+			frappe.db.set_value("Engineer", ENG2, "status", "Active")
+
+	def test_only_admin_controls_notification_rules(self):
+		perms = {p.role: p for p in frappe.get_meta("AMC Notification Flow").permissions}
+		self.assertEqual(set(perms), {"System Manager", "AMC Admin"})
+		settings = {p.role: p.write for p in frappe.get_meta("AMC Settings").permissions}
+		self.assertTrue(settings["AMC Admin"])
+		self.assertFalse(settings.get("AMC Technical Manager"))
 
 	def test_reschedule_is_recorded(self):
 		doc = make_amc("TST-RS")

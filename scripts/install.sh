@@ -10,6 +10,8 @@
 #   --site NAME    SITE_NAME (hostname users type in the browser)   [only used when .env is created]
 #   --url URL      HOST_NAME (base URL in email / Teams links)      [only used when .env is created]
 #   --port N       HTTP_PORT published on the host                  [only used when .env is created]
+#   --admin-email E   create an AMC Admin user (full control, incl. notification rules) with a generated password
+#   --admin-name N    full name of that user (default "AMC Admin")
 #   --demo         sample users (one per role) and clients and AMCs T-001..T-006 from docs/TEST_PLAN.md
 #   --no-build     use the existing ${CUSTOM_IMAGE}:${CUSTOM_TAG} image instead of building it
 #
@@ -17,15 +19,17 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-site="" url="" port="" demo=0 build=1
+site="" url="" port="" demo=0 build=1 admin_email="" admin_name="AMC Admin"
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--site) site="$2"; shift 2 ;;
 		--url) url="$2"; shift 2 ;;
 		--port) port="$2"; shift 2 ;;
 		--demo) demo=1; shift ;;
+		--admin-email) admin_email="$2"; shift 2 ;;
+		--admin-name) admin_name="$2"; shift 2 ;;
 		--no-build) build=0; shift ;;
-		-h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+		-h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) echo "Unknown option: $1 (see --help)" >&2; exit 2 ;;
 	esac
 done
@@ -99,7 +103,16 @@ else
 	bench execute amc_tracker.setup.install.set_system_time_zone --kwargs '{"time_zone": "Asia/Qatar"}' >/dev/null
 fi
 
-# 5. Optional demo data
+# 5. Optional AMC Admin user
+admin_password=""
+if [[ -n "$admin_email" ]]; then
+	step "Creating the AMC Admin user $admin_email"
+	admin_password=$(random_password)
+	bench execute amc_tracker.setup.install.create_admin_user \
+		--kwargs "{\"email\": \"$admin_email\", \"full_name\": \"$admin_name\", \"password\": \"$admin_password\"}" >/dev/null
+fi
+
+# 6. Optional demo data
 demo_password=""
 if (( demo )); then
 	step "Creating demo users, clients and AMCs"
@@ -114,10 +127,15 @@ cat <<EOF
     Open:      ${HOST_NAME}   (use this hostname: real-time pop-ups need it)
     Log in:    Administrator / ADMIN_PASSWORD from .env
 EOF
+if [[ -n "$admin_password" ]]; then
+	cat <<EOF
+    AMC Admin: $admin_email / $admin_password   (change it after the first login)
+EOF
+fi
 if [[ -n "$demo_password" ]]; then
 	cat <<EOF
     Demo users (password: $demo_password)
-               helpdesk@amc.test, eng1..eng4@amc.test, am@amc.test, tm@amc.test
+               admin@amc.test (AMC Admin), helpdesk@amc.test, eng1..eng4@amc.test, am@amc.test, tm@amc.test
                Remove them later: docker compose exec backend bench --site $SITE_NAME execute amc_tracker.setup.demo.delete_test_data
 EOF
 fi

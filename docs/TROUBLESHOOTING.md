@@ -117,17 +117,22 @@ cp docker-compose.apparmor.yml docker-compose.override.yml   # git-ignored, load
 | Daily job returns `"skipped": "non-working day"` | Today is a weekend day (*Settings > Weekend Days*, default Friday, Saturday) or a **Public Holiday**. Intended: reminders are caught up on the next working day. Untick *Skip Weekends and Holidays* to send every day. |
 | A reminder arrived a day earlier / later than its *Days* | Its planned date fell on a weekend or holiday and was moved ("before" reminders to the previous working day, all others to the next). The Notifications tab shows "(moved to working day)". |
 | No reminders for an AMC that is due | *Reminders Paused Until* is set (directly or by a contact log entry). Clear it; rules with *Ignore Pause* (overdue escalation) still fire. |
-| **Assign Engineers** button missing | Only the helpdesk, Technical Managers and System Managers assign engineers, and only on **Active** AMCs. Save the AMC first. |
-| "… does not have the role AMC Engineer" when assigning | Give the user the role (*Settings > Users > Roles*), then assign again. |
+| **Assign Engineers** button missing | Only the helpdesk, Technical Managers, AMC Admins and System Managers assign engineers, and only on **Active** AMCs. Save the AMC first. |
+| "… has no active Engineer profile" when assigning or adding an engineer to an AMC | Create the user's **Engineer** profile (*Operations > Engineers > + Add*), or set the existing profile back to *Active*. The profile grants the AMC Engineer role. |
+| An engineer is missing from the Engineer pick list | Only **Active** engineer profiles are offered. Users without a profile are not engineers. |
+| "… cannot be an engineer" | Guest and Administrator cannot have an engineer profile. Use a named user. |
+| Expertise list in an AMC Engineers row is short | It only offers the picked engineer's areas. Add the area to the engineer's profile first. |
+| Settings is read-only / "Only the AMC Admin can change these settings and the notification rules." | Intended: only **AMC Admin** and System Manager edit Settings and the notification rules. Give the role with `bench execute amc_tracker.setup.install.create_admin_user --kwargs '{"email": "…"}'` or *Users > Roles*. |
+| No *Notification Rules* tile, or "Not permitted" on AMC Notification Flow | Same: the rules are for the AMC Admin and System Manager only. Technical Managers can read the Notification Log. |
 | Engineer cannot set the visit date / "Engineers can only plan and report their visit" | Engineers edit only **their own** visits, and only the date, mode, times, report and findings. Reassigning the engineer is a helpdesk action. |
 | Visit date refused with "… is on leave" / "… already has a PM visit" | *Settings > Block Unavailable Visit Dates* is on. Pick another date, or fix the Engineer Leave. With the setting off you only get a warning. |
 | "Cycle … already has PM visits" when changing the Next PM Due Date | Moving the due date would move the cycle and orphan its visits. Sign the cycle off, or cancel its visits, first. |
 | **Sign Off Cycle** says "Reports are missing for …" | Every visit (except cancelled ones) needs a Visit Report, or *Included in the combined AMC report* ticked **and** the Combined PM Report attached on the AMC. |
 | Combined report attached but a visit is still *Completed* | Tick *Included in the combined AMC report* on that visit and save it. |
 | *Email Client to Schedule*: "Enter the client email address." | Fill the **Client**'s contact email (and CC emails). The mail goes through the Email Queue. |
-| No **Import** button on the Client / AMC list | Only users who can create the record **and** Data Import see it. Install / migrate grants Data Import to **AMC Technical Manager**. |
+| No **Import** button on the Client / AMC list | Only users who can create the record **and** Data Import see it. Install / migrate grants Data Import to **AMC Admin** and **AMC Technical Manager**. |
 | AMC import: engineers missing | Use the AMC template: one row per extra engineer with only *Engineer (Engineers)* / *Expertise (Engineers)* filled. The client code must exist first (import Clients before AMCs). |
-| "You don't have access to Report: AMC Management Summary / AMC Audit Trail" | Intended: the summary is for Technical / Account Managers, the audit trail for Technical Managers. |
+| "You don't have access to Report: AMC Management Summary / AMC Audit Trail" | Intended: the summary is for Technical / Account Managers and the AMC Admin, the audit trail for Technical Managers and the AMC Admin. |
 | Dashboard charts show "No data yet" | They count signed-off cycles and reported visits. A new site shows bars after the first sign-off. |
 | Desk is still in English for an Arabic user | Set *My Settings > Language* = Arabic and reload; after an upgrade run `bench --site $S clear-cache`. |
 | No PM to-do email | *Settings > Send Daily PM To-Do* is off, it is a non-working day, there was nothing to list, or no enabled user has role AMC Helpdesk. *Send PM To-Do Now* sends it on demand. |

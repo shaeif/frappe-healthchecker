@@ -25,15 +25,24 @@
 		esc,
 
 		engineer_query() {
-			return { query: ROLE_QUERY, filters: { role: "AMC Engineer" } };
+			return { filters: { status: "Active" } };
+		},
+
+		expertise_of(engineer) {
+			if (!engineer) return Promise.resolve([]);
+			return frappe.xcall("amc_tracker.amc_tracker.doctype.engineer.engineer.expertise_of", { engineer });
+		},
+
+		is_admin() {
+			return frappe.user.has_role(["System Manager", "AMC Admin"]);
 		},
 
 		is_manager() {
-			return frappe.user.has_role(["System Manager", "AMC Technical Manager", "AMC Account Manager"]);
+			return frappe.user.has_role(["System Manager", "AMC Admin", "AMC Technical Manager", "AMC Account Manager"]);
 		},
 
 		is_helpdesk() {
-			return frappe.user.has_role(["System Manager", "AMC Technical Manager", "AMC Helpdesk"]);
+			return frappe.user.has_role(["System Manager", "AMC Admin", "AMC Technical Manager", "AMC Helpdesk"]);
 		},
 
 		status_color(status) {

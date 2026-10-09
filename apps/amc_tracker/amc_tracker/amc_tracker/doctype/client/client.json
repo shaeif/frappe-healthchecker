@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "autoname": "field:client_code",
- "creation": "2026-10-12 12:30:00.000000",
+ "creation": "2026-10-13 09:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -148,7 +148,7 @@
    "link_fieldname": "client"
   }
  ],
- "modified": "2026-10-12 12:30:00.000000",
+ "modified": "2026-10-13 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "AMC Tracker",
  "name": "Client",
@@ -165,6 +165,19 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Admin",
    "share": 1,
    "write": 1
   },

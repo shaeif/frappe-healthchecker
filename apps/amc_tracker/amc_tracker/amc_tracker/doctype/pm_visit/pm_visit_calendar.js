@@ -20,9 +20,9 @@ frappe.views.calendar["PM Visit"] = {
 		{
 			fieldtype: "Link",
 			fieldname: "engineer",
-			options: "User",
+			options: "Engineer",
 			label: __("Engineer"),
-			get_query: () => ({ query: "amc_tracker.api.queries.users_with_role", filters: { role: "AMC Engineer" } }),
+			get_query: () => ({ filters: { status: "Active" } }),
 		},
 		{ fieldtype: "Link", fieldname: "client", options: "Client", label: __("Client") },
 	],

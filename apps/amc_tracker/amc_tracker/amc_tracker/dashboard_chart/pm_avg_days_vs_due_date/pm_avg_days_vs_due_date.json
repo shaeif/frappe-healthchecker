@@ -13,7 +13,7 @@
  "idx": 0,
  "is_public": 1,
  "is_standard": 1,
- "modified": "2026-10-12 13:00:00.000000",
+ "modified": "2026-10-13 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "AMC Tracker",
  "name": "PM Avg Days vs Due Date",
@@ -21,6 +21,9 @@
  "roles": [
   {
    "role": "System Manager"
+  },
+  {
+   "role": "AMC Admin"
   },
   {
    "role": "AMC Technical Manager"

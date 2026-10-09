@@ -10,8 +10,7 @@ frappe.query_reports["Upcoming PM"] = {
 			fieldname: "engineer",
 			label: __("Engineer"),
 			fieldtype: "Link",
-			options: "User",
-			get_query: () => ({ query: "amc_tracker.api.queries.users_with_role", filters: { role: "AMC Engineer" } }),
+			options: "Engineer",
 		},
 		{
 			fieldname: "cycle_status",
