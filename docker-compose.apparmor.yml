@@ -1,0 +1,28 @@
+# Opt-in, for hosts where Docker cannot load AppArmor profiles (e.g. a Proxmox LXC):
+#   "AppArmor enabled on system but the docker-default profile could not be loaded ... Access denied"
+# Enable it by copying it to docker-compose.override.yml (git-ignored, loaded automatically):
+#   cp docker-compose.apparmor.yml docker-compose.override.yml
+# It runs every service without an AppArmor profile, so use it only where the host cannot provide one.
+services:
+  db:
+    security_opt: ["apparmor:unconfined"]
+  redis-cache:
+    security_opt: ["apparmor:unconfined"]
+  redis-queue:
+    security_opt: ["apparmor:unconfined"]
+  configurator:
+    security_opt: ["apparmor:unconfined"]
+  create-site:
+    security_opt: ["apparmor:unconfined"]
+  backend:
+    security_opt: ["apparmor:unconfined"]
+  websocket:
+    security_opt: ["apparmor:unconfined"]
+  frontend:
+    security_opt: ["apparmor:unconfined"]
+  queue-long:
+    security_opt: ["apparmor:unconfined"]
+  queue-short:
+    security_opt: ["apparmor:unconfined"]
+  scheduler:
+    security_opt: ["apparmor:unconfined"]

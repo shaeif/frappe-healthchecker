@@ -3,3 +3,4 @@ backups/
 __pycache__/
 *.pyc
 .DS_Store
+docker-compose.override.yml
