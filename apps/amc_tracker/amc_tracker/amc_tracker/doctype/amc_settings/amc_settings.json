@@ -1,0 +1,272 @@
+{
+ "actions": [],
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_setup",
+  "setup_links",
+  "section_email",
+  "default_helpdesk_email",
+  "default_technical_manager",
+  "column_break_email",
+  "enable_daily_digest",
+  "digest_recipients",
+  "renewal_alert_days",
+  "section_teams",
+  "enable_teams",
+  "column_break_teams",
+  "default_teams_webhook_url",
+  "section_popup",
+  "enable_popup_notifications",
+  "section_working",
+  "weekend_days",
+  "skip_non_working_days",
+  "column_break_working",
+  "block_unavailable_booking",
+  "section_scheduling_email",
+  "scheduling_email_subject",
+  "scheduling_email_template",
+  "section_todo",
+  "enable_helpdesk_todo",
+  "column_break_todo",
+  "todo_horizon_days",
+  "client_reply_wait_days",
+  "section_summary",
+  "management_summary_frequency",
+  "column_break_summary",
+  "management_summary_recipients",
+  "section_language",
+  "notification_language"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_setup",
+   "fieldtype": "Section Break",
+   "label": "Setup"
+  },
+  {
+   "fieldname": "setup_links",
+   "fieldtype": "HTML",
+   "label": "Setup"
+  },
+  {
+   "fieldname": "section_email",
+   "fieldtype": "Section Break",
+   "label": "Email"
+  },
+  {
+   "description": "Shared helpdesk mailbox. Used when a rule targets the AMC field helpdesk_contact and it is empty.",
+   "fieldname": "default_helpdesk_email",
+   "fieldtype": "Data",
+   "label": "Default Helpdesk Email",
+   "options": "Email"
+  },
+  {
+   "description": "Used when an AMC has no Technical Manager.",
+   "fieldname": "default_technical_manager",
+   "fieldtype": "Link",
+   "label": "Default Technical Manager",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_email",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_daily_digest",
+   "fieldtype": "Check",
+   "label": "Enable Daily Overdue Digest"
+  },
+  {
+   "description": "Comma separated emails. Technical Managers always receive the digest.",
+   "fieldname": "digest_recipients",
+   "fieldtype": "Small Text",
+   "label": "Digest Recipients"
+  },
+  {
+   "default": "60",
+   "description": "Alert the Account Manager this many days before Contract End.",
+   "fieldname": "renewal_alert_days",
+   "fieldtype": "Int",
+   "label": "Renewal Alert Days"
+  },
+  {
+   "fieldname": "section_teams",
+   "fieldtype": "Section Break",
+   "label": "Microsoft Teams"
+  },
+  {
+   "fieldname": "enable_teams",
+   "fieldtype": "Check",
+   "label": "Enable Teams"
+  },
+  {
+   "fieldname": "column_break_teams",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "URL of a Teams Workflows flow 'When a Teams webhook request is received' > 'Post card in a chat or channel'.",
+   "fieldname": "default_teams_webhook_url",
+   "fieldtype": "Small Text",
+   "label": "Default Teams Webhook URL"
+  },
+  {
+   "fieldname": "section_popup",
+   "fieldtype": "Section Break",
+   "label": "Pop-up Notifications"
+  },
+  {
+   "default": "1",
+   "description": "On-screen pop-up and bell notification for users (per-rule 'Also Show Pop-up').",
+   "fieldname": "enable_popup_notifications",
+   "fieldtype": "Check",
+   "label": "Enable Pop-up Notifications"
+  },
+  {
+   "fieldname": "section_working",
+   "fieldtype": "Section Break",
+   "label": "Working Days and Visit Dates"
+  },
+  {
+   "default": "Friday,Saturday",
+   "description": "Comma separated day names.",
+   "fieldname": "weekend_days",
+   "fieldtype": "Data",
+   "label": "Weekend Days"
+  },
+  {
+   "default": "1",
+   "description": "Nothing is sent on non-working days; reminders move to the nearest working day.",
+   "fieldname": "skip_non_working_days",
+   "fieldtype": "Check",
+   "label": "Skip Weekends and Holidays"
+  },
+  {
+   "fieldname": "column_break_working",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Block (instead of warn) a visit date when the engineer is on leave or already has a visit that day, or on a non-working day.",
+   "fieldname": "block_unavailable_booking",
+   "fieldtype": "Check",
+   "label": "Block Unavailable Visit Dates"
+  },
+  {
+   "fieldname": "section_scheduling_email",
+   "fieldtype": "Section Break",
+   "label": "Client Scheduling Email"
+  },
+  {
+   "fieldname": "scheduling_email_subject",
+   "fieldtype": "Small Text",
+   "label": "Scheduling Email Subject"
+  },
+  {
+   "description": "Jinja: doc (AMC), client, visit, proposed_dates (list), due_date, sender_name. Empty = default.",
+   "fieldname": "scheduling_email_template",
+   "fieldtype": "Code",
+   "label": "Scheduling Email Message",
+   "options": "Jinja"
+  },
+  {
+   "fieldname": "section_todo",
+   "fieldtype": "Section Break",
+   "label": "PM To-Do"
+  },
+  {
+   "default": "1",
+   "description": "Daily email + pop-up to the AMC Helpdesk users.",
+   "fieldname": "enable_helpdesk_todo",
+   "fieldtype": "Check",
+   "label": "Send Daily PM To-Do"
+  },
+  {
+   "fieldname": "column_break_todo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "45",
+   "description": "AMCs due within this many days without engineers or visit dates appear in the to-do.",
+   "fieldname": "todo_horizon_days",
+   "fieldtype": "Int",
+   "label": "Planning Horizon (days)"
+  },
+  {
+   "default": "3",
+   "description": "A scheduling email without reply after this many days appears as 'Awaiting client reply'.",
+   "fieldname": "client_reply_wait_days",
+   "fieldtype": "Int",
+   "label": "Client Reply Wait (days)"
+  },
+  {
+   "fieldname": "section_summary",
+   "fieldtype": "Section Break",
+   "label": "Management Summary"
+  },
+  {
+   "default": "Weekly",
+   "description": "Weekly: every Sunday for the previous 7 days. Monthly: on the 1st for the previous month.",
+   "fieldname": "management_summary_frequency",
+   "fieldtype": "Select",
+   "label": "Summary Frequency",
+   "options": "Off\nWeekly\nMonthly"
+  },
+  {
+   "fieldname": "column_break_summary",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Comma separated. Technical Managers always receive it.",
+   "fieldname": "management_summary_recipients",
+   "fieldtype": "Small Text",
+   "label": "Summary Recipients"
+  },
+  {
+   "fieldname": "section_language",
+   "fieldtype": "Section Break",
+   "label": "Language"
+  },
+  {
+   "default": "English",
+   "description": "Language of emails, Teams cards and pop-ups. Users choose the screen language in their own settings.",
+   "fieldname": "notification_language",
+   "fieldtype": "Select",
+   "label": "Notification Language",
+   "options": "English\nArabic\nEnglish + Arabic"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "AMC Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "AMC Technical Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

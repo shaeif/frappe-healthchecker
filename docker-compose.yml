@@ -1,17 +1,17 @@
-# HC Tracker on Frappe v16 - single-host Docker Compose stack.
+# AMC Tracker on Frappe v16 - single-host Docker Compose stack.
 # Layout follows frappe_docker's pwd.yml (backend, configurator, create-site, db, frontend,
 # queue-short, queue-long, redis-cache, redis-queue, scheduler, websocket), but runs a custom
-# image (Dockerfile in this folder) and installs ONLY frappe + hc_tracker on the site.
+# image (Dockerfile in this folder) and installs ONLY frappe + amc_tracker on the site.
 #
 #   cp .env.example .env   # then edit the passwords
 #   docker compose build
 #   docker compose up -d
-#   open http://<SITE_NAME>:${HTTP_PORT:-8080}   e.g. http://hc.localhost:8080
+#   open http://<SITE_NAME>:${HTTP_PORT:-8080}   e.g. http://amc.localhost:8080
 
-name: ${COMPOSE_PROJECT_NAME:-hc-tracker}
+name: ${COMPOSE_PROJECT_NAME:-amc-tracker}
 
 x-app-image: &app_image
-  image: ${CUSTOM_IMAGE:-hc-tracker}:${CUSTOM_TAG:-latest}
+  image: ${CUSTOM_IMAGE:-amc-tracker}:${CUSTOM_TAG:-latest}
   pull_policy: never
   networks:
     - frappe_network
@@ -115,19 +115,19 @@ services:
             --db-root-username=root \
             --db-root-password="$$DB_ROOT_PASSWORD" \
             --admin-password="$$ADMIN_PASSWORD" \
-            --install-app hc_tracker \
+            --install-app amc_tracker \
             --set-default;
         fi;
-        bench --site "$$SITE_NAME" list-apps | grep -q hc_tracker || bench --site "$$SITE_NAME" install-app hc_tracker;
+        bench --site "$$SITE_NAME" list-apps | grep -q amc_tracker || bench --site "$$SITE_NAME" install-app amc_tracker;
         bench --site "$$SITE_NAME" set-config host_name "$$HOST_NAME";
-        bench --site "$$SITE_NAME" execute hc_tracker.setup.install.set_system_time_zone --kwargs '{"time_zone": "Asia/Qatar"}';
+        bench --site "$$SITE_NAME" execute amc_tracker.setup.install.set_system_time_zone --kwargs '{"time_zone": "Asia/Qatar"}';
         bench --site "$$SITE_NAME" scheduler enable;
         bench --site "$$SITE_NAME" scheduler resume;
         echo "Site $$SITE_NAME ready";
     environment:
       TZ: ${TZ:-Asia/Qatar}
       SITE_NAME: ${SITE_NAME:?Set SITE_NAME in .env}
-      HOST_NAME: ${HOST_NAME:-http://hc.localhost:8080}
+      HOST_NAME: ${HOST_NAME:-http://amc.localhost:8080}
       DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
     depends_on:

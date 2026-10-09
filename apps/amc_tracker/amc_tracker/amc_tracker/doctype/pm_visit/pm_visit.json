@@ -1,0 +1,307 @@
+{
+ "actions": [],
+ "autoname": "format:PMV-{YYYY}-{#####}",
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "amc",
+  "client",
+  "client_name",
+  "column_break_visit",
+  "engineer",
+  "engineer_name",
+  "status",
+  "section_schedule",
+  "visit_date",
+  "visit_mode",
+  "column_break_schedule",
+  "start_time",
+  "end_time",
+  "column_break_schedule_2",
+  "reschedule_reason",
+  "reschedule_note",
+  "section_scope",
+  "expertise_covered",
+  "visit_notes",
+  "column_break_scope",
+  "cycle_label",
+  "due_date",
+  "section_report",
+  "report",
+  "included_in_combined",
+  "column_break_report",
+  "completed_on",
+  "findings",
+  "section_reschedules",
+  "reschedules",
+  "last_rescheduled_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "amc",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "AMC",
+   "options": "AMC",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "amc.client",
+   "fieldname": "client",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Client",
+   "options": "Client",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fetch_from": "amc.client_name",
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Client Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_visit",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "engineer",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Engineer",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "engineer.full_name",
+   "fieldname": "engineer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Engineer Name",
+   "read_only": 1
+  },
+  {
+   "default": "To be scheduled",
+   "description": "Set automatically: date chosen = Scheduled, completed = Completed, report attached = Report submitted.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "To be scheduled\nScheduled\nCompleted\nReport submitted\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_schedule",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "description": "Chosen by the engineer with the client.",
+   "fieldname": "visit_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Visit Date"
+  },
+  {
+   "default": "On-site",
+   "fieldname": "visit_mode",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Visit Mode",
+   "options": "On-site\nRemote"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "label": "From"
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "label": "To"
+  },
+  {
+   "fieldname": "column_break_schedule_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.visit_date && !doc.__islocal",
+   "fieldname": "reschedule_reason",
+   "fieldtype": "Select",
+   "label": "Reschedule Reason",
+   "options": "\nClient request\nEngineer unavailable\nAccess / change-freeze window\nPublic holiday\nChanged in calendar\nOther"
+  },
+  {
+   "depends_on": "eval:doc.reschedule_reason",
+   "fieldname": "reschedule_note",
+   "fieldtype": "Small Text",
+   "label": "Reschedule Note"
+  },
+  {
+   "fieldname": "section_scope",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "expertise_covered",
+   "fieldtype": "Table MultiSelect",
+   "label": "Expertise Covered",
+   "options": "PM Visit Expertise"
+  },
+  {
+   "fieldname": "visit_notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cycle_label",
+   "fieldtype": "Data",
+   "label": "Cycle",
+   "read_only": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "PM Due Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_report",
+   "fieldtype": "Section Break",
+   "label": "Report"
+  },
+  {
+   "fieldname": "report",
+   "fieldtype": "Attach",
+   "label": "Visit Report"
+  },
+  {
+   "description": "Tick when this visit is covered by the combined report attached on the AMC.",
+   "fieldname": "included_in_combined",
+   "fieldtype": "Check",
+   "label": "Included in the combined AMC report"
+  },
+  {
+   "fieldname": "column_break_report",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Date",
+   "label": "Completed On"
+  },
+  {
+   "fieldname": "findings",
+   "fieldtype": "Small Text",
+   "label": "Findings"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_reschedules",
+   "fieldtype": "Section Break",
+   "label": "Reschedule History"
+  },
+  {
+   "fieldname": "reschedules",
+   "fieldtype": "Table",
+   "label": "Reschedule History",
+   "options": "PM Reschedule",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_rescheduled_on",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Last Rescheduled On",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [
+  {
+   "group": "Communication",
+   "link_doctype": "Client Contact Log",
+   "link_fieldname": "pm_visit"
+  }
+ ],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "PM Visit",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Technical Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Helpdesk",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Account Manager"
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Engineer",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "client_name,engineer_name",
+ "show_title_field_in_link": 1,
+ "sort_field": "visit_date",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "client_name",
+ "track_changes": 1
+}

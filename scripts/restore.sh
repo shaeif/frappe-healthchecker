@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Restore the HC Tracker site from a backup set in ./backups
+# Restore the AMC Tracker site from a backup set in ./backups
 # Usage: ./scripts/restore.sh <timestamp-prefix>      e.g. ./scripts/restore.sh 20261009_183250
 set -euo pipefail
 cd "$(dirname "$0")/.."

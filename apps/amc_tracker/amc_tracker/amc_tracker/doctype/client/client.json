@@ -1,0 +1,219 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "field:client_code",
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "client_code",
+  "client_name",
+  "status",
+  "column_break_client",
+  "account_manager",
+  "address",
+  "section_contact",
+  "contact_name",
+  "contact_designation",
+  "column_break_contact",
+  "contact_email",
+  "contact_phone",
+  "column_break_contact_2",
+  "cc_emails",
+  "preferred_contact_method",
+  "section_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "description": "Short unique code, e.g. C001. Used as the record ID.",
+   "fieldname": "client_code",
+   "fieldtype": "Data",
+   "label": "Client Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Client Name",
+   "reqd": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nInactive"
+  },
+  {
+   "fieldname": "column_break_client",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Default Account Manager for this client's AMCs.",
+   "fieldname": "account_manager",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Account Manager",
+   "options": "User"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "section_contact",
+   "fieldtype": "Section Break",
+   "label": "Primary Contact"
+  },
+  {
+   "fieldname": "contact_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Contact Name"
+  },
+  {
+   "fieldname": "contact_designation",
+   "fieldtype": "Data",
+   "label": "Designation"
+  },
+  {
+   "fieldname": "column_break_contact",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "contact_phone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Phone",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "column_break_contact_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Copied on emails to the client (comma separated).",
+   "fieldname": "cc_emails",
+   "fieldtype": "Small Text",
+   "label": "CC Emails"
+  },
+  {
+   "fieldname": "preferred_contact_method",
+   "fieldtype": "Select",
+   "label": "Preferred Contact Method",
+   "options": "\nPhone\nEmail\nTeams\nWhatsApp"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [
+  {
+   "group": "Contracts",
+   "link_doctype": "AMC",
+   "link_fieldname": "client"
+  },
+  {
+   "group": "Preventive Maintenance",
+   "link_doctype": "PM Visit",
+   "link_fieldname": "client"
+  },
+  {
+   "group": "Communication",
+   "link_doctype": "Client Contact Log",
+   "link_fieldname": "client"
+  }
+ ],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "Client",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Technical Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Account Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Helpdesk",
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Engineer"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "client_name",
+ "show_title_field_in_link": 1,
+ "sort_field": "client_name",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "client_name",
+ "track_changes": 1
+}

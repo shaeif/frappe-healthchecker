@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "engineer",
+  "engineer_name",
+  "expertise",
+  "is_lead"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "engineer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Engineer",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "fetch_from": "engineer.full_name",
+   "fieldname": "engineer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Engineer Name",
+   "read_only": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "expertise",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Expertise",
+   "options": "Expertise"
+  },
+  {
+   "columns": 1,
+   "fieldname": "is_lead",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Lead"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "AMC Engineer",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

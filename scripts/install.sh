@@ -2,15 +2,15 @@
 # One-command install: .env -> image build -> stack up -> site created -> setup wizard skipped.
 #
 # Usage:
-#   ./scripts/install.sh                                   # local test on http://hc.localhost:8080
-#   ./scripts/install.sh --site hc.example.com --url https://hc.example.com --port 80
-#   ./scripts/install.sh --demo                            # also create the test-plan users + contracts
+#   ./scripts/install.sh                                   # local test on http://amc.localhost:8080
+#   ./scripts/install.sh --site amc.example.com --url https://amc.example.com --port 80
+#   ./scripts/install.sh --demo                            # also create the test-plan users, clients and AMCs
 #
 # Options:
 #   --site NAME    SITE_NAME (hostname users type in the browser)   [only used when .env is created]
 #   --url URL      HOST_NAME (base URL in email / Teams links)      [only used when .env is created]
 #   --port N       HTTP_PORT published on the host                  [only used when .env is created]
-#   --demo         sample users (one per role) and contracts T-001..T-008 from docs/TEST_PLAN.md
+#   --demo         sample users (one per role) and clients and AMCs T-001..T-006 from docs/TEST_PLAN.md
 #   --no-build     use the existing ${CUSTOM_IMAGE}:${CUSTOM_TAG} image instead of building it
 #
 # Safe to run again: an existing .env and an existing site are kept.
@@ -53,7 +53,7 @@ if [[ ! -f .env ]]; then
 		set_env SITE_NAME "$site"
 		[[ -z "$url" ]] && url="http://$site:${port:-8080}"
 	fi
-	[[ -z "$url" && -n "$port" ]] && url="http://hc.localhost:$port"
+	[[ -z "$url" && -n "$port" ]] && url="http://amc.localhost:$port"
 	[[ -n "$url" ]] && set_env HOST_NAME "${url%/}"
 else
 	step "Using the existing .env"
@@ -67,7 +67,7 @@ fi
 
 # 2. Image
 if (( build )); then
-	step "Building ${CUSTOM_IMAGE:-hc-tracker}:${CUSTOM_TAG:-latest} (first time takes a few minutes)"
+	step "Building ${CUSTOM_IMAGE:-amc-tracker}:${CUSTOM_TAG:-latest} (first time takes a few minutes)"
 	docker compose build
 fi
 
@@ -96,17 +96,17 @@ else
 	step "Completing the setup wizard (Qatar, Asia/Qatar, QAR)"
 	bench execute frappe.desk.page.setup_wizard.setup_wizard.setup_complete \
 		--kwargs '{"args": {"language": "English", "country": "Qatar", "timezone": "Asia/Qatar", "currency": "QAR"}}' >/dev/null
-	bench execute hc_tracker.setup.install.set_system_time_zone --kwargs '{"time_zone": "Asia/Qatar"}' >/dev/null
+	bench execute amc_tracker.setup.install.set_system_time_zone --kwargs '{"time_zone": "Asia/Qatar"}' >/dev/null
 fi
 
 # 5. Optional demo data
 demo_password=""
 if (( demo )); then
-	step "Creating demo users and contracts"
+	step "Creating demo users, clients and AMCs"
 	demo_password=$(random_password)
-	bench execute hc_tracker.setup.demo.create_test_users --kwargs "{\"password\": \"$demo_password\"}" >/dev/null
-	bench execute hc_tracker.setup.demo.configure_test_settings >/dev/null
-	bench execute hc_tracker.setup.demo.create_test_contracts >/dev/null
+	bench execute amc_tracker.setup.demo.create_test_users --kwargs "{\"password\": \"$demo_password\"}" >/dev/null
+	bench execute amc_tracker.setup.demo.configure_test_settings >/dev/null
+	bench execute amc_tracker.setup.demo.create_test_data >/dev/null
 fi
 
 step "Done"
@@ -117,10 +117,10 @@ EOF
 if [[ -n "$demo_password" ]]; then
 	cat <<EOF
     Demo users (password: $demo_password)
-               helpdesk@hc.test, eng1@hc.test, eng2@hc.test, am@hc.test, tm@hc.test
-               Remove them later: docker compose exec backend bench --site $SITE_NAME execute hc_tracker.setup.demo.delete_test_data
+               helpdesk@amc.test, eng1..eng4@amc.test, am@amc.test, tm@amc.test
+               Remove them later: docker compose exec backend bench --site $SITE_NAME execute amc_tracker.setup.demo.delete_test_data
 EOF
 fi
 cat <<EOF
-    Next:      Office 365 email account (README section 6) and HC Settings (section 7).
+    Next:      Office 365 email account (README section 6) and AMC Settings (section 7).
 EOF

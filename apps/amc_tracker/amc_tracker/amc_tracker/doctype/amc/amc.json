@@ -1,0 +1,416 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "format:AMC-{YYYY}-{####}",
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "client",
+  "client_name",
+  "amc_title",
+  "column_break_amc",
+  "status",
+  "frequency",
+  "interval_months",
+  "section_period",
+  "contract_start",
+  "column_break_period",
+  "contract_end",
+  "section_people",
+  "account_manager",
+  "technical_manager",
+  "column_break_people",
+  "helpdesk_contact",
+  "notification_flow",
+  "section_engineers",
+  "engineers",
+  "section_scope",
+  "scope",
+  "column_break_scope",
+  "notes",
+  "pm_tab",
+  "next_due_date",
+  "cycle_label",
+  "cycle_status",
+  "column_break_pm",
+  "reminders_paused_until",
+  "last_pm_date",
+  "section_visits",
+  "visits_html",
+  "section_report",
+  "combined_report",
+  "client_signoff",
+  "column_break_report",
+  "findings_summary",
+  "section_follow_up",
+  "last_contact_on",
+  "last_contact_outcome",
+  "column_break_follow_up",
+  "scheduling_email_sent_on",
+  "notifications_tab",
+  "notification_timeline",
+  "history_tab",
+  "cycles"
+ ],
+ "fields": [
+  {
+   "fieldname": "client",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Client",
+   "options": "Client",
+   "reqd": 1
+  },
+  {
+   "bold": 1,
+   "fetch_from": "client.client_name",
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Client Name",
+   "read_only": 1
+  },
+  {
+   "description": "e.g. Network AMC, Security AMC. Defaults to '<Client> AMC'.",
+   "fieldname": "amc_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "AMC Name"
+  },
+  {
+   "fieldname": "column_break_amc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Contract Status",
+   "options": "Active\nOn Hold\nExpired\nCancelled"
+  },
+  {
+   "default": "Quarterly",
+   "fieldname": "frequency",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "PM Frequency",
+   "options": "Monthly\nQuarterly\nHalf-yearly\nYearly",
+   "reqd": 1
+  },
+  {
+   "fieldname": "interval_months",
+   "fieldtype": "Int",
+   "label": "Interval (months)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_period",
+   "fieldtype": "Section Break",
+   "label": "Contract Period"
+  },
+  {
+   "fieldname": "contract_start",
+   "fieldtype": "Date",
+   "label": "Contract Start"
+  },
+  {
+   "fieldname": "column_break_period",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contract_end",
+   "fieldtype": "Date",
+   "label": "Contract End"
+  },
+  {
+   "fieldname": "section_people",
+   "fieldtype": "Section Break",
+   "label": "Responsibilities"
+  },
+  {
+   "fieldname": "account_manager",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Account Manager",
+   "options": "User"
+  },
+  {
+   "description": "Optional. Overrides the default Technical Manager in AMC Settings.",
+   "fieldname": "technical_manager",
+   "fieldtype": "Link",
+   "label": "Technical Manager",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_people",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Optional. Overrides the default helpdesk mailbox in AMC Settings.",
+   "fieldname": "helpdesk_contact",
+   "fieldtype": "Link",
+   "label": "Helpdesk Contact",
+   "options": "User"
+  },
+  {
+   "description": "Empty = the rules for this PM frequency.",
+   "fieldname": "notification_flow",
+   "fieldtype": "Link",
+   "label": "Notification Rules",
+   "options": "AMC Notification Flow"
+  },
+  {
+   "fieldname": "section_engineers",
+   "fieldtype": "Section Break",
+   "label": "Engineers"
+  },
+  {
+   "description": "Assigned by the helpdesk. One row per engineer with their area of expertise.",
+   "fieldname": "engineers",
+   "fieldtype": "Table",
+   "label": "Engineers",
+   "options": "AMC Engineer"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_scope",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "description": "Devices / sites covered, e.g. 40 Catalyst switches, 2 WLCs, 2 PA-3220.",
+   "fieldname": "scope",
+   "fieldtype": "Small Text",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "pm_tab",
+   "fieldtype": "Tab Break",
+   "label": "PM Cycle"
+  },
+  {
+   "fieldname": "next_due_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Next PM Due Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cycle_label",
+   "fieldtype": "Data",
+   "label": "Cycle",
+   "read_only": 1
+  },
+  {
+   "default": "Not started",
+   "fieldname": "cycle_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Cycle Status",
+   "options": "Not started\nEngineers assigned\nScheduled\nIn progress\nReports submitted\nSigned off",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_pm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Date-based reminders (except rules marked 'Ignore Pause') wait until this date.",
+   "fieldname": "reminders_paused_until",
+   "fieldtype": "Date",
+   "label": "Reminders Paused Until"
+  },
+  {
+   "fieldname": "last_pm_date",
+   "fieldtype": "Date",
+   "label": "Last PM Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_visits",
+   "fieldtype": "Section Break",
+   "label": "PM Visits (current cycle)"
+  },
+  {
+   "fieldname": "visits_html",
+   "fieldtype": "HTML",
+   "label": "PM Visits"
+  },
+  {
+   "fieldname": "section_report",
+   "fieldtype": "Section Break",
+   "label": "Combined Report and Sign-off"
+  },
+  {
+   "description": "Optional: one report covering several visits. Tick 'Included in the combined AMC report' on those visits.",
+   "fieldname": "combined_report",
+   "fieldtype": "Attach",
+   "label": "Combined PM Report"
+  },
+  {
+   "fieldname": "client_signoff",
+   "fieldtype": "Attach",
+   "label": "Client Sign-off"
+  },
+  {
+   "fieldname": "column_break_report",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "findings_summary",
+   "fieldtype": "Small Text",
+   "label": "Findings Summary"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_follow_up",
+   "fieldtype": "Section Break",
+   "label": "Client Follow-up"
+  },
+  {
+   "fieldname": "last_contact_on",
+   "fieldtype": "Datetime",
+   "label": "Last Contact On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_contact_outcome",
+   "fieldtype": "Data",
+   "label": "Last Contact Outcome",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_follow_up",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "scheduling_email_sent_on",
+   "fieldtype": "Datetime",
+   "label": "Scheduling Email Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notifications_tab",
+   "fieldtype": "Tab Break",
+   "label": "Notifications"
+  },
+  {
+   "fieldname": "notification_timeline",
+   "fieldtype": "HTML",
+   "label": "Notification Timeline"
+  },
+  {
+   "fieldname": "history_tab",
+   "fieldtype": "Tab Break",
+   "label": "History"
+  },
+  {
+   "fieldname": "cycles",
+   "fieldtype": "Table",
+   "label": "PM History",
+   "options": "PM Cycle",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [
+  {
+   "group": "Preventive Maintenance",
+   "link_doctype": "PM Visit",
+   "link_fieldname": "amc"
+  },
+  {
+   "group": "Communication",
+   "link_doctype": "Client Contact Log",
+   "link_fieldname": "amc"
+  },
+  {
+   "group": "Notifications",
+   "link_doctype": "AMC Notification Log",
+   "link_fieldname": "amc"
+  }
+ ],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "AMC",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Technical Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Account Manager",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Helpdesk",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Engineer",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "client_name,amc_title",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "amc_title",
+ "track_changes": 1
+}

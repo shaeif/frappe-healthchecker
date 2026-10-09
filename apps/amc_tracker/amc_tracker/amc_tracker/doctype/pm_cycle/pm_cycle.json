@@ -1,0 +1,119 @@
+{
+ "actions": [],
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "period_label",
+  "due_date",
+  "completed_on",
+  "signed_off_on",
+  "days_late",
+  "engineers",
+  "visits",
+  "combined_report",
+  "client_signoff",
+  "findings_summary",
+  "signed_off_by"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "period_label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Cycle",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Due Date",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "completed_on",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Last Visit",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "signed_off_on",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Signed Off On",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "Last visit date minus due date (0 or less = on time).",
+   "fieldname": "days_late",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Days Late",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "engineers",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Engineers",
+   "read_only": 1
+  },
+  {
+   "fieldname": "visits",
+   "fieldtype": "Small Text",
+   "label": "PM Visits",
+   "read_only": 1
+  },
+  {
+   "fieldname": "combined_report",
+   "fieldtype": "Attach",
+   "label": "Combined Report",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "client_signoff",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "Client Sign-off",
+   "read_only": 1
+  },
+  {
+   "fieldname": "findings_summary",
+   "fieldtype": "Small Text",
+   "label": "Findings Summary",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "signed_off_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Signed Off By",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "PM Cycle",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

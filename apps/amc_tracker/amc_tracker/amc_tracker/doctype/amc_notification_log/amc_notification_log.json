@@ -1,0 +1,196 @@
+{
+ "actions": [],
+ "autoname": "AMCNL-.#######",
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "amc",
+  "client_name",
+  "pm_visit",
+  "flow",
+  "step_no",
+  "step_label",
+  "period_label",
+  "column_break_log",
+  "channel",
+  "status",
+  "sent_on",
+  "run_date",
+  "section_details",
+  "recipients",
+  "cc",
+  "subject",
+  "error"
+ ],
+ "fields": [
+  {
+   "fieldname": "amc",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "AMC",
+   "options": "AMC",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Client Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pm_visit",
+   "fieldtype": "Link",
+   "label": "PM Visit",
+   "options": "PM Visit",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "flow",
+   "fieldtype": "Link",
+   "label": "Rule Set",
+   "options": "AMC Notification Flow",
+   "read_only": 1
+  },
+  {
+   "fieldname": "step_no",
+   "fieldtype": "Int",
+   "label": "Step No",
+   "read_only": 1
+  },
+  {
+   "fieldname": "step_label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Step",
+   "read_only": 1
+  },
+  {
+   "description": "Cycle label (e.g. 2026-Q4), digest-YYYY-MM-DD, todo-YYYY-MM-DD, renewal-YYYY-MM-DD.",
+   "fieldname": "period_label",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Cycle",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_log",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Channel",
+   "options": "Email\nTeams\nSystem Notification",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Sent\nFailed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sent_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Sent On",
+   "read_only": 1
+  },
+  {
+   "description": "Evaluation date of the run (today, or the simulated date).",
+   "fieldname": "run_date",
+   "fieldtype": "Date",
+   "label": "Run Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "recipients",
+   "fieldtype": "Small Text",
+   "label": "Recipients",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cc",
+   "fieldtype": "Small Text",
+   "label": "CC",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Small Text",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status=='Failed'",
+   "fieldname": "error",
+   "fieldtype": "Code",
+   "label": "Error",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "AMC Notification Log",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager"
+  },
+  {
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Technical Manager"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Account Manager"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Helpdesk"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AMC Engineer"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "step_label"
+}

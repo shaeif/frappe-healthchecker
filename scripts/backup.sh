@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Back up the HC Tracker site (database + public/private files + site config) to ./backups
+# Back up the AMC Tracker site (database + public/private files + site config) to ./backups
 # Usage: ./scripts/backup.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."

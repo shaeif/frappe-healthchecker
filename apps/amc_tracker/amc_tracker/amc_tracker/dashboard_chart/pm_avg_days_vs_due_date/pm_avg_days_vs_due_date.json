@@ -1,0 +1,39 @@
+{
+ "chart_name": "PM Avg Days vs Due Date",
+ "chart_type": "Custom",
+ "color": "#e67e22",
+ "creation": "2026-10-12 12:00:00.000000",
+ "custom_options": "{\"axisOptions\": {\"xIsSeries\": 1}}",
+ "docstatus": 0,
+ "doctype": "Dashboard Chart",
+ "document_type": "AMC",
+ "dynamic_filters_json": "[]",
+ "empty_state_message": "Shows how early or late PM cycles finish once they are signed off.",
+ "filters_json": "{}",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "modified": "2026-10-12 13:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "PM Avg Days vs Due Date",
+ "owner": "Administrator",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "AMC Technical Manager"
+  },
+  {
+   "role": "AMC Account Manager"
+  },
+  {
+   "role": "AMC Helpdesk"
+  }
+ ],
+ "source": "AMC Tracker Metrics",
+ "timeseries": 0,
+ "type": "Bar",
+ "use_report_chart": 0
+}

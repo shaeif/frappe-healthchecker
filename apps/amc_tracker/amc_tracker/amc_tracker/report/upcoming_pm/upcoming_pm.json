@@ -1,0 +1,37 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2026-10-12 12:00:00.000000",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2026-10-12 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "Upcoming PM",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "AMC",
+ "report_name": "Upcoming PM",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "AMC Technical Manager"
+  },
+  {
+   "role": "AMC Account Manager"
+  },
+  {
+   "role": "AMC Helpdesk"
+  },
+  {
+   "role": "AMC Engineer"
+  }
+ ]
+}

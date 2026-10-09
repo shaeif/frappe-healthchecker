@@ -1,0 +1,319 @@
+{
+ "actions": [],
+ "creation": "2026-10-12 12:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "step_no",
+  "step_label",
+  "enabled",
+  "column_break_head",
+  "trigger_mode",
+  "trigger_days",
+  "channel",
+  "section_recipient",
+  "recipient_type",
+  "recipient_field",
+  "recipient_role",
+  "recipient_user",
+  "recipient_email",
+  "fallback_role",
+  "column_break_cc",
+  "cc_type",
+  "cc_field",
+  "cc_role",
+  "cc_user",
+  "cc_email",
+  "section_timing",
+  "on_status",
+  "after_step_no",
+  "repeat_every_days",
+  "column_break_timing",
+  "only_if_status_in",
+  "stop_when_status",
+  "ignore_pause",
+  "section_delivery",
+  "show_popup",
+  "column_break_delivery",
+  "teams_webhook_url",
+  "section_message",
+  "subject_template",
+  "message_template",
+  "section_arabic",
+  "subject_template_ar",
+  "message_template_ar"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "step_no",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Step No",
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "step_label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Step Label",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 3,
+   "default": "Days before due date",
+   "fieldname": "trigger_mode",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trigger",
+   "options": "Days before due date\nDays after due date (overdue)\nDays after previous step if not resolved\nOn cycle status change\nOn visit assigned\nDays before visit date\nOn visit scheduled\nOn visit rescheduled\nOn visit report submitted"
+  },
+  {
+   "columns": 1,
+   "depends_on": "eval:['Days before due date','Days after due date (overdue)','Days after previous step if not resolved','Days before visit date'].includes(doc.trigger_mode)",
+   "fieldname": "trigger_days",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Days"
+  },
+  {
+   "columns": 1,
+   "default": "Email",
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Channel",
+   "options": "Email\nTeams\nEmail + Teams\nSystem Notification",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_recipient",
+   "fieldtype": "Section Break",
+   "label": "Recipient (To)"
+  },
+  {
+   "default": "AMC Field",
+   "fieldname": "recipient_type",
+   "fieldtype": "Select",
+   "label": "Recipient Type",
+   "options": "AMC Field\nVisit Engineer\nCycle Engineers\nEngineers Yet To Schedule\nRole\nSpecific User\nEmail Address\nClient Contact",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='AMC Field'",
+   "fieldname": "recipient_field",
+   "fieldtype": "Select",
+   "label": "Recipient AMC Field",
+   "mandatory_depends_on": "eval:doc.recipient_type=='AMC Field'",
+   "options": "\naccount_manager\ntechnical_manager\nhelpdesk_contact"
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='Role'",
+   "fieldname": "recipient_role",
+   "fieldtype": "Link",
+   "label": "Recipient Role",
+   "mandatory_depends_on": "eval:doc.recipient_type=='Role'",
+   "options": "Role"
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='Specific User'",
+   "fieldname": "recipient_user",
+   "fieldtype": "Link",
+   "label": "Recipient User",
+   "mandatory_depends_on": "eval:doc.recipient_type=='Specific User'",
+   "options": "User"
+  },
+  {
+   "depends_on": "eval:doc.recipient_type=='Email Address'",
+   "description": "One or more addresses, comma separated.",
+   "fieldname": "recipient_email",
+   "fieldtype": "Small Text",
+   "label": "Recipient Email Address(es)",
+   "mandatory_depends_on": "eval:doc.recipient_type=='Email Address'"
+  },
+  {
+   "description": "Used when the recipient above resolves to nobody.",
+   "fieldname": "fallback_role",
+   "fieldtype": "Link",
+   "label": "Fallback Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "column_break_cc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cc_type",
+   "fieldtype": "Select",
+   "label": "CC Type",
+   "options": "\nAMC Field\nVisit Engineer\nCycle Engineers\nEngineers Yet To Schedule\nRole\nSpecific User\nEmail Address\nClient Contact"
+  },
+  {
+   "depends_on": "eval:doc.cc_type=='AMC Field'",
+   "fieldname": "cc_field",
+   "fieldtype": "Select",
+   "label": "CC AMC Field",
+   "mandatory_depends_on": "eval:doc.cc_type=='AMC Field'",
+   "options": "\naccount_manager\ntechnical_manager\nhelpdesk_contact"
+  },
+  {
+   "depends_on": "eval:doc.cc_type=='Role'",
+   "fieldname": "cc_role",
+   "fieldtype": "Link",
+   "label": "CC Role",
+   "mandatory_depends_on": "eval:doc.cc_type=='Role'",
+   "options": "Role"
+  },
+  {
+   "depends_on": "eval:doc.cc_type=='Specific User'",
+   "fieldname": "cc_user",
+   "fieldtype": "Link",
+   "label": "CC User",
+   "mandatory_depends_on": "eval:doc.cc_type=='Specific User'",
+   "options": "User"
+  },
+  {
+   "depends_on": "eval:doc.cc_type=='Email Address'",
+   "description": "One or more addresses, comma separated.",
+   "fieldname": "cc_email",
+   "fieldtype": "Small Text",
+   "label": "CC Email Address(es)",
+   "mandatory_depends_on": "eval:doc.cc_type=='Email Address'"
+  },
+  {
+   "fieldname": "section_timing",
+   "fieldtype": "Section Break",
+   "label": "When"
+  },
+  {
+   "depends_on": "eval:doc.trigger_mode=='On cycle status change'",
+   "fieldname": "on_status",
+   "fieldtype": "Select",
+   "label": "On Cycle Status",
+   "mandatory_depends_on": "eval:doc.trigger_mode=='On cycle status change'",
+   "options": "\nEngineers assigned\nScheduled\nIn progress\nReports submitted\nSigned off"
+  },
+  {
+   "depends_on": "eval:doc.trigger_mode=='Days after previous step if not resolved'",
+   "description": "Step to wait for. 0 = the step with the next lower Step No.",
+   "fieldname": "after_step_no",
+   "fieldtype": "Int",
+   "label": "After Step No"
+  },
+  {
+   "default": "0",
+   "description": "0 = send once per cycle (per visit for visit rules). 1 = repeat daily while the conditions still hold.",
+   "fieldname": "repeat_every_days",
+   "fieldtype": "Int",
+   "label": "Repeat Every (days)"
+  },
+  {
+   "fieldname": "column_break_timing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Comma separated, e.g. Not started. Empty = any status.",
+   "fieldname": "only_if_status_in",
+   "fieldtype": "Small Text",
+   "label": "Only If Cycle Status In"
+  },
+  {
+   "description": "Comma separated, e.g. Scheduled,In progress,Reports submitted,Signed off.",
+   "fieldname": "stop_when_status",
+   "fieldtype": "Small Text",
+   "label": "Stop When Cycle Status"
+  },
+  {
+   "description": "Send even while the AMC's reminders are paused (e.g. management escalations).",
+   "fieldname": "ignore_pause",
+   "fieldtype": "Check",
+   "label": "Ignore Pause"
+  },
+  {
+   "fieldname": "section_delivery",
+   "fieldtype": "Section Break",
+   "label": "How"
+  },
+  {
+   "default": "1",
+   "description": "Also show an on-screen pop-up and a bell notification to recipients who are system users.",
+   "fieldname": "show_popup",
+   "fieldtype": "Check",
+   "label": "Also Show Pop-up"
+  },
+  {
+   "fieldname": "column_break_delivery",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.channel=='Teams' || doc.channel=='Email + Teams'",
+   "description": "Optional. Teams Workflows webhook for this step; falls back to AMC Settings.",
+   "fieldname": "teams_webhook_url",
+   "fieldtype": "Small Text",
+   "label": "Teams Webhook URL"
+  },
+  {
+   "fieldname": "section_message",
+   "fieldtype": "Section Break",
+   "label": "Message"
+  },
+  {
+   "description": "Jinja. Variables: doc (the AMC), client, visit (PM Visit or None), step, flow, days_left, days_overdue, due_date, visit_date, days_to_visit, amc_url, visit_url, cycle_label, today, event_status, engineers, old_visit_date, reschedule_reason, reschedule_note, last_cycle. Empty = default subject.",
+   "fieldname": "subject_template",
+   "fieldtype": "Small Text",
+   "label": "Subject Template"
+  },
+  {
+   "description": "Jinja / HTML. Empty = default message.",
+   "fieldname": "message_template",
+   "fieldtype": "Code",
+   "label": "Message Template",
+   "options": "Jinja"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_arabic",
+   "fieldtype": "Section Break",
+   "label": "Arabic Message"
+  },
+  {
+   "fieldname": "subject_template_ar",
+   "fieldtype": "Small Text",
+   "label": "Subject Template (Arabic)"
+  },
+  {
+   "description": "Used when AMC Settings > Notification Language is Arabic or English + Arabic.",
+   "fieldname": "message_template_ar",
+   "fieldtype": "Code",
+   "label": "Message Template (Arabic)",
+   "options": "Jinja"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "AMC Tracker",
+ "name": "AMC Notification Step",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
