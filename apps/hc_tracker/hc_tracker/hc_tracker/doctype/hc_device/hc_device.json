@@ -1,0 +1,131 @@
+{
+ "actions": [],
+ "creation": "2026-10-08 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "hostname",
+  "ip_address",
+  "vendor",
+  "device_role",
+  "model",
+  "enabled",
+  "column_break_device",
+  "connection_method",
+  "port",
+  "username",
+  "password",
+  "enable_secret",
+  "api_key",
+  "last_collected_on",
+  "notes"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "hostname",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hostname",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "ip_address",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "IP Address / FQDN"
+  },
+  {
+   "columns": 2,
+   "fieldname": "vendor",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Vendor / Platform",
+   "options": "Cisco IOS-XE\nCisco IOS\nCisco NX-OS\nCisco AireOS WLC\nCisco Catalyst 9800 WLC\nPalo Alto PAN-OS\nFortiGate FortiOS"
+  },
+  {
+   "columns": 2,
+   "fieldname": "device_role",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Device Role",
+   "options": "Switch\nWireless Controller\nFirewall\nRouter\nOther"
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "columns": 1,
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Collect Data"
+  },
+  {
+   "fieldname": "column_break_device",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "SSH (Netmiko)",
+   "fieldname": "connection_method",
+   "fieldtype": "Select",
+   "label": "Connection Method",
+   "options": "SSH (Netmiko)\nREST API\nSNMP"
+  },
+  {
+   "fieldname": "port",
+   "fieldtype": "Int",
+   "label": "Port"
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "label": "Username"
+  },
+  {
+   "fieldname": "password",
+   "fieldtype": "Password",
+   "label": "Password"
+  },
+  {
+   "fieldname": "enable_secret",
+   "fieldtype": "Password",
+   "label": "Enable Secret"
+  },
+  {
+   "description": "Palo Alto XML API key or FortiGate REST API token.",
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key / Token"
+  },
+  {
+   "fieldname": "last_collected_on",
+   "fieldtype": "Datetime",
+   "label": "Last Collected On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-08 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HC Tracker",
+ "name": "HC Device",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

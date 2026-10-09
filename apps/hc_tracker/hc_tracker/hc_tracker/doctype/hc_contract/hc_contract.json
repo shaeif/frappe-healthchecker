@@ -1,0 +1,323 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "field:client_id",
+ "creation": "2026-10-08 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "client_id",
+  "client_name",
+  "frequency",
+  "interval_months",
+  "column_break_main",
+  "status",
+  "next_due_date",
+  "scheduled_date",
+  "last_hc_date",
+  "people_section",
+  "assigned_engineer",
+  "engineer_name",
+  "account_manager",
+  "column_break_people",
+  "helpdesk_contact",
+  "technical_manager",
+  "notification_flow",
+  "contract_section",
+  "contract_start",
+  "contract_end",
+  "column_break_contract",
+  "scope",
+  "notes",
+  "current_cycle_tab",
+  "current_report",
+  "current_signoff",
+  "column_break_cycle",
+  "findings_summary",
+  "notifications_tab",
+  "notification_timeline",
+  "history_tab",
+  "cycles",
+  "devices_tab",
+  "devices"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "description": "Unique client code, e.g. C001. Used as the document name.",
+   "fieldname": "client_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Client ID",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Client Name",
+   "reqd": 1
+  },
+  {
+   "default": "Quarterly",
+   "fieldname": "frequency",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "HC Frequency",
+   "options": "Monthly\nQuarterly\nHalf-yearly\nYearly",
+   "reqd": 1
+  },
+  {
+   "description": "Set automatically from the frequency.",
+   "fieldname": "interval_months",
+   "fieldtype": "Int",
+   "label": "Interval (months)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Not started",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Not started\nScheduled\nIn progress\nReport sent\nSigned off",
+   "reqd": 1
+  },
+  {
+   "fieldname": "next_due_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Next Due Date",
+   "reqd": 1
+  },
+  {
+   "description": "Booked HC window. Required when status is Scheduled.",
+   "fieldname": "scheduled_date",
+   "fieldtype": "Date",
+   "label": "Scheduled Date"
+  },
+  {
+   "fieldname": "last_hc_date",
+   "fieldtype": "Date",
+   "label": "Last HC Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "people_section",
+   "fieldtype": "Section Break",
+   "label": "People"
+  },
+  {
+   "fieldname": "assigned_engineer",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Assigned Engineer",
+   "options": "User"
+  },
+  {
+   "fetch_from": "assigned_engineer.full_name",
+   "fieldname": "engineer_name",
+   "fieldtype": "Data",
+   "label": "Engineer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "account_manager",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Account Manager",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_people",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Optional. Overrides the default helpdesk (HC Settings) for this client.",
+   "fieldname": "helpdesk_contact",
+   "fieldtype": "Link",
+   "label": "Helpdesk Contact",
+   "options": "User"
+  },
+  {
+   "description": "Optional. Overrides the default Technical Manager (HC Settings).",
+   "fieldname": "technical_manager",
+   "fieldtype": "Link",
+   "label": "Technical Manager",
+   "options": "User"
+  },
+  {
+   "description": "Leave empty to use the flow for this frequency, or the default flow.",
+   "fieldname": "notification_flow",
+   "fieldtype": "Link",
+   "label": "Notification Flow",
+   "options": "HC Notification Flow"
+  },
+  {
+   "fieldname": "contract_section",
+   "fieldtype": "Section Break",
+   "label": "Contract"
+  },
+  {
+   "fieldname": "contract_start",
+   "fieldtype": "Date",
+   "label": "Contract Start"
+  },
+  {
+   "fieldname": "contract_end",
+   "fieldtype": "Date",
+   "label": "Contract End"
+  },
+  {
+   "fieldname": "column_break_contract",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Devices / sites in scope, e.g. 40 Catalyst switches, 2 C9800 WLCs, 2 PA-3220, 1 FortiGate 200F",
+   "fieldname": "scope",
+   "fieldtype": "Small Text",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "current_cycle_tab",
+   "fieldtype": "Tab Break",
+   "label": "Current Cycle"
+  },
+  {
+   "description": "Attaching the report moves the status to Report sent.",
+   "fieldname": "current_report",
+   "fieldtype": "Attach",
+   "label": "Current Report"
+  },
+  {
+   "fieldname": "current_signoff",
+   "fieldtype": "Attach",
+   "label": "Current Sign-off"
+  },
+  {
+   "fieldname": "column_break_cycle",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "findings_summary",
+   "fieldtype": "Text",
+   "label": "Findings Summary"
+  },
+  {
+   "fieldname": "notifications_tab",
+   "fieldtype": "Tab Break",
+   "label": "Notifications"
+  },
+  {
+   "fieldname": "notification_timeline",
+   "fieldtype": "HTML",
+   "label": "Notification Timeline"
+  },
+  {
+   "fieldname": "history_tab",
+   "fieldtype": "Tab Break",
+   "label": "History"
+  },
+  {
+   "fieldname": "cycles",
+   "fieldtype": "Table",
+   "label": "HC Cycles",
+   "options": "HC Cycle",
+   "read_only": 1
+  },
+  {
+   "fieldname": "devices_tab",
+   "fieldtype": "Tab Break",
+   "label": "Devices (Phase 2)"
+  },
+  {
+   "fieldname": "devices",
+   "fieldtype": "Table",
+   "label": "Devices",
+   "options": "HC Device"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-08 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HC Tracker",
+ "name": "HC Contract",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HC Technical Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HC Account Manager",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HC Engineer",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HC Helpdesk",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "client_name,assigned_engineer,status",
+ "show_title_field_in_link": 1,
+ "sort_field": "next_due_date",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "client_name",
+ "track_changes": 1
+}
