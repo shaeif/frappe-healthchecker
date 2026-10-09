@@ -337,12 +337,12 @@ def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, statu
 		return result
 	elif mode == MODE_BEFORE_DUE:
 		planned = add_days(due, -days)
-		result.planned_label = _("{0} days before due date").format(days)
+		result.planned_label = _("{0} day(s) before due date").format(days)
 	elif mode == MODE_AFTER_DUE:
 		planned = add_days(due, days)
-		result.planned_label = _("{0} days after due date").format(days)
+		result.planned_label = _("{0} day(s) after due date").format(days)
 	elif mode == MODE_BEFORE_SCHEDULED:
-		result.planned_label = _("{0} days before scheduled date").format(days)
+		result.planned_label = _("{0} day(s) before scheduled date").format(days)
 		if not contract.scheduled_date:
 			result.reason = _("No scheduled date yet")
 			if sent:
@@ -356,7 +356,7 @@ def evaluate_step(contract, step, on_date, sent_map, settings, steps=None, statu
 			return result
 	elif mode == MODE_AFTER_PREVIOUS:
 		previous_no = _previous_step_no(step, steps)
-		result.planned_label = _("{0} days after step {1}").format(days, previous_no or "?")
+		result.planned_label = _("{0} day(s) after step {1}").format(days, previous_no or "?")
 		previous = sent_map.get(cint(previous_no)) if previous_no else None
 		if not previous:
 			result.reason = _("Waiting for step {0} to be sent").format(previous_no or "?")
