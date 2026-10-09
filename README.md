@@ -57,6 +57,7 @@ frappe-healthchecker/
 │   ├── TEST_PLAN.md
 │   └── TROUBLESHOOTING.md
 ├── scripts/
+│   ├── install.sh               # one-command install (.env, build, start, site, setup wizard, optional demo)
 │   ├── backup.sh                # bench backup --with-files + copy to ./backups
 │   └── restore.sh               # restore a backup set from ./backups
 └── apps/
@@ -170,6 +171,18 @@ frappe-healthchecker/
 ---
 
 ## 4. Install and run
+
+**Single command** (Docker Engine 23+ with Compose v2):
+```bash
+git clone <this repo> hc-tracker && cd hc-tracker
+./scripts/install.sh            # local test: http://hc.localhost:8080
+./scripts/install.sh --demo     # same, plus the test-plan users (one per role) and contracts T-001..T-008
+./scripts/install.sh --site hc.example.com --url https://hc.example.com --port 80   # production names
+```
+It creates `.env` with random database / Administrator passwords (mode 600), builds the image, starts the stack,
+waits for the site, completes the setup wizard (Qatar, Asia/Qatar, QAR) and prints the URL. Running it again is
+safe: an existing `.env` and site are kept. `--no-build` reuses the image already built. Then do sections 6 and 7
+(Office 365 account, HC Settings). Sections 4.1 to 4.3 below are the same steps done by hand.
 
 ### 4.1 Prerequisites
 Docker Engine 23+ with the Compose v2 plugin, about 4 GB RAM, and internet access while building (pip fetches `flit_core`).
