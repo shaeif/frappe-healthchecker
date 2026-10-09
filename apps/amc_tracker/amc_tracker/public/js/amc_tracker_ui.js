@@ -240,4 +240,16 @@
 			d.show();
 		},
 	};
+
+	// Resizing a list column saves List View Settings and Property Setters for every user, which only
+	// System Manager may write; anyone else (AMC Admin included) got "No permission for List View
+	// Settings". Keep the new width on screen for them and skip the save, like the List Settings menu.
+	const ListView = frappe.views && frappe.views.ListView;
+	if (ListView && ListView.prototype.save_column_width) {
+		const save_column_width = ListView.prototype.save_column_width;
+		ListView.prototype.save_column_width = function (...args) {
+			if (!frappe.user.has_role("System Manager")) return;
+			return save_column_width.apply(this, args);
+		};
+	}
 })();
