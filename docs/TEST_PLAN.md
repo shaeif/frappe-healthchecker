@@ -82,6 +82,11 @@ Helpdesk → Engineer → Technical Manager chain (subjects in the log / Email Q
 
 **Email Queue** (search bar > Email Queue): one email per *Email* log row, with recipients and CC as above.
 
+If the Office 365 Email Account is not configured yet, every *Email* row is **Failed** with
+"No default outgoing Email Account…" while the pop-up rows are *Sent*. Configure the account and run the job
+again: only the failed email channels are retried (including the status-change step 2 of T-005), and the pop-ups
+are not repeated.
+
 ---
 
 ## 2. No duplicates on a second run
@@ -246,9 +251,13 @@ button. The digest posts an orange "Attention" card listing the overdue contract
 b execute hc_tracker.setup.demo.delete_test_data
 ```
 
-## Automated tests (optional)
+## Automated tests (optional, test site only)
+
+`run-tests` creates Frappe's own test records (users, email accounts…). Run it on a throw-away site, never on
+production.
 
 ```bash
 b set-config allow_tests true
-b run-tests --app hc_tracker
+b run-tests --app hc_tracker          # 6 tests: default flows, interval/period labels, report -> Report sent,
+                                      # blocked sign-off, due-date roll-over, idempotent daily run
 ```
