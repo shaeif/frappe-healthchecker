@@ -99,7 +99,7 @@ def get_overdue_rows(on_date) -> list[dict]:
 	open_names = set(get_open_contracts(on_date))
 	rows = frappe.get_all(
 		"HC Contract",
-		filters={"next_due_date": ["<", on_date], "status": ["!=", "Signed off"]},
+		filters=[["next_due_date", "is", "set"], ["next_due_date", "<", on_date], ["status", "!=", "Signed off"]],
 		fields=[
 			"name",
 			"client_name",

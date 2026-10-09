@@ -30,15 +30,17 @@ def get_columns():
 def get_data(filters):
 	start = getdate(today())
 	end = add_days(start, cint(filters.days) or 90)
-	conditions = {"status": ["!=", "Signed off"]}
+	# list filters: a dict cannot hold two conditions on next_due_date, and "<=" alone
+	# would match contracts with no due date (Frappe compares NULL as the earliest date)
+	conditions = [["status", "!=", "Signed off"], ["next_due_date", "is", "set"]]
 	if cint(filters.include_overdue):
-		conditions["next_due_date"] = ["<=", end]
+		conditions.append(["next_due_date", "<=", end])
 	else:
-		conditions["next_due_date"] = ["between", [start, end]]
+		conditions.append(["next_due_date", "between", [start, end]])
 	if filters.engineer:
-		conditions["assigned_engineer"] = filters.engineer
+		conditions.append(["assigned_engineer", "=", filters.engineer])
 	if filters.status:
-		conditions["status"] = filters.status
+		conditions.append(["status", "=", filters.status])
 
 	rows = frappe.get_list(
 		"HC Contract",

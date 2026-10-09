@@ -21,7 +21,9 @@ to *HC Settings > Digest Recipients*.
 # 0.1 Sample users (one per role). Pass your own password.
 b execute hc_tracker.setup.demo.create_test_users --kwargs '{"password": "Test#HC-2026!"}'
 
-# 0.2 HC Settings for the test (Technical Manager fallback, digest, pop-ups)
+# 0.2 HC Settings for the test (Technical Manager fallback, digest, pop-ups). It also turns
+#     "Skip Weekends and Holidays" off so sections 1-14 give the same results on any weekday;
+#     section 15 turns it back on.
 b execute hc_tracker.setup.demo.configure_test_settings
 #     optional Teams: --kwargs '{"teams_webhook_url": "<your Workflows URL>"}'
 
@@ -245,7 +247,91 @@ button. The digest posts an orange "Attention" card listing the overdue contract
 
 ---
 
-## 15. Clean up
+## 15. v1.3 helpdesk features
+
+Run 15.1 to 15.10 after section 14 (the sample contracts must still exist). Log in as **helpdesk@hc.test**
+unless a step says otherwise. `N` = the next Friday after D, `W` = a working day (Sun-Thu) 5-8 days after D that
+is not a holiday.
+
+### 15.1 Weekend and holidays
+```bash
+b execute hc_tracker.setup.demo.configure_test_settings --kwargs '{"working_days": 1}'
+b execute hc_tracker.notifications.scheduler.run_daily --kwargs '{"on_date": "N"}'
+```
+Expected: `{"date": "N", "skipped": "non-working day", "management_summary": "..."}`. **HC Holiday** lists
+National Sport Day and Qatar National Day (18 Dec) for this year and next. **Test Flow** on a contract whose
+reminder would land on a Friday shows the planned date with "(moved to working day)".
+
+### 15.2 Engineer leave and booking checks
+1. **HC Engineer Leave > New**: Engineer `eng1@hc.test`, Leave Type *Training*, From/To = `W`. Save.
+2. Open **T-001 > Helpdesk > Book Health Check**, pick `W`. The dialog shows a yellow **Check before booking**
+   box: "Omar Engineer is on training from W to W", plus the engineer's bookings that week.
+3. Pick `N` instead: the box says it is a weekend day.
+4. As Administrator tick *HC Settings > Block Unavailable Bookings* and book T-001 on `W`: the save is refused with
+   the same message. Untick it again.
+
+### 15.3 Book and reschedule
+1. T-001 > Book Health Check on a free working day `B` (no leave): status *Scheduled*; step 2 is sent to the engineer.
+2. Change *Scheduled Date* to `B`+2 and save: a prompt asks for the **Reschedule Reason** (pick *Client request*,
+   add a note). *Current Cycle > Reschedule History* has a row (old date, new date, reason, note, you).
+   **HC Notification Log** has step 8 *Assigned Engineer - HC rescheduled* for T-001 (engineer, CC helpdesk),
+   subject `[HC] Rescheduled to …`.
+
+### 15.4 Booking Calendar
+Contract list > **Booking Calendar**. Booked contracts appear on their scheduled date, unbooked ones as
+"Due: <client>" on their due date. Drag a "Due" item (e.g. T-002) to a working day: it becomes *Scheduled* on that
+day. Drag it again: the date changes and a reschedule row with reason *Changed in calendar* is added.
+
+### 15.5 Booking request email
+T-008 > **Helpdesk > Send Booking Request**, fill two proposed dates, **Send**. Check:
+* **Email Queue**: one mail to T-008's *Client Contact Email* listing the two dates;
+* the contract timeline shows the email (Communication);
+* *Booking Request Sent On* is set and **HC Contact Log** has *Booking request sent*.
+
+### 15.6 Contact log, follow-up, pause
+T-004 > **Helpdesk > Log Contact Attempt**: Method *Phone*, Outcome *Client asked for later date*,
+Pause Reminders Until = D+10. Save. The contract shows *Reminders Paused Until* D+10 and a banner; its
+**Notification Timeline** shows date-based steps as "Reminders paused until …" (the overdue escalation, which has
+*Ignore Pause*, is not held back). Log another attempt on T-006 with Outcome *No answer* and Follow Up On = D.
+The workspace card **Follow-ups Due Today** shows 1.
+
+### 15.7 Helpdesk to-do
+Open the **Helpdesk To-Do** report (date D): T-006 under *Follow-ups due today*, T-003 under *Overdue*,
+unbooked contracts due within 45 days under *Book now*. As Administrator click **HC Settings > Send Helpdesk To-Do
+Now**: one email to the HC Helpdesk users in the Email Queue, and a pop-up for each of them. After 3 days
+(Client Reply Wait), T-008 moves to *Awaiting client reply*:
+```bash
+b execute hc_tracker.notifications.helpdesk_todo.build_todo --kwargs '{"on_date": "D+3"}'
+```
+
+### 15.8 Client visit reminder (step 9)
+For the contract booked in 15.3, run the daily job 2 days before the booked date (1 day for Monthly):
+```bash
+b execute hc_tracker.notifications.scheduler.run_daily --kwargs '{"on_date": "<booked date - 1>"}'
+```
+If that day is a Friday, Saturday or holiday, use the working day before it. HC Notification Log: step 9
+*Client - visit reminder* to T-001's *Client Contact Email*, CC the HC Helpdesk users.
+
+### 15.9 Management summary, charts, audit trail
+* As **tm@hc.test**: *HC Settings > Send Management Summary Now* → email with completed / on time / late /
+  overdue per client. The **HC Management Summary** report shows the same with a chart (Group By Client or Engineer).
+  Helpdesk users get "You don't have access" for this report.
+* Workspace: four charts under **Performance**; T-007 (signed off in section 9) shows as one completed, on-time HC.
+* **HC Audit Trail** (Technical Manager): filter Contract = T-001 → status, scheduled date and reschedule rows
+  with the user and time.
+
+### 15.10 Excel import and Arabic
+* As **tm@hc.test**, contract list > **Import > Download Excel Template**: workbook with a *Contracts* sheet (one column per field) and a
+  *Help* sheet. Add a row (Client ID `T-101`, name, frequency *Monthly*, next due date, engineer, account manager)
+  and use **Import > Import from Excel** → *Start Import*. T-101 is created with interval 1 and the Monthly flow.
+* Set *My Settings > Language* = **Arabic** for am@hc.test and log in: the desk is right-to-left and HC Tracker
+  labels are Arabic.
+* *HC Settings > Notification Language* = **English + Arabic**, then book a contract: the step 2 email has the
+  English text, a line, and the Arabic text right-aligned. Set it back to English.
+
+---
+
+## 16. Clean up
 
 ```bash
 b execute hc_tracker.setup.demo.delete_test_data
@@ -261,3 +347,6 @@ b set-config allow_tests true
 b run-tests --app hc_tracker          # 6 tests: default flows, interval/period labels, report -> Report sent,
                                       # blocked sign-off, due-date roll-over, idempotent daily run
 ```
+
+Run the tests on a non-working day too: `test_daily_run_is_idempotent` passes either way (the daily job skips,
+or sends once).

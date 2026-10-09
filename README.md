@@ -10,6 +10,10 @@ a Microsoft Teams Adaptive Card and an **on-screen pop-up + bell notification**.
 * Time zone **Asia/Qatar**. The daily job runs at **08:00** Qatar time.
 * **Helpdesk scheduling and notification tool only.** HC Tracker never connects to client devices and stores no
   device credentials. Engineers run the health check with their own tools and attach the report.
+* **v1.3 helpdesk features** (section 13): booking calendar with drag-and-drop, booking-request emails to the client,
+  contact log with follow-ups, engineer leave / Qatar holidays / weekend (Fri-Sat) awareness, reschedule history with
+  reasons, client visit reminders, a daily helpdesk to-do email, a weekly/monthly management summary, performance
+  charts, Excel import, an audit trail report and Arabic / bilingual notifications plus an Arabic UI.
 
 Other documents:
 
@@ -68,7 +72,12 @@ frappe-healthchecker/
             ├── patches.txt
             ├── permissions.py   # permission_query_conditions + has_permission
             ├── utils.py
+            ├── scheduling.py    # working days, Qatar holidays, engineer availability checks
             ├── api/
+            │   ├── booking.py        # booking-request email to the client (+ contact log)
+            │   ├── calendar.py       # Booking Calendar events + drag-and-drop booking / rescheduling
+            │   ├── import_tools.py   # Excel import template download
+            │   ├── metrics.py        # workspace performance charts
             │   ├── number_cards.py   # workspace number cards (permission aware)
             │   ├── queries.py        # "users with role X" link query
             │   └── tools.py          # test email / Teams card / pop-up buttons
@@ -76,28 +85,43 @@ frappe-healthchecker/
             ├── notifications/
             │   ├── channels.py       # Email, Teams Adaptive Card, System Notification (bell + pop-up)
             │   ├── engine.py         # step evaluation, recipients, sending, log, dry run, timeline
+            │   ├── helpdesk_todo.py  # daily helpdesk to-do email
             │   ├── scheduler.py      # daily job, overdue digest, renewal alerts
-            │   └── templates.py      # default Jinja subjects/messages
+            │   ├── summary.py        # weekly / monthly management summary
+            │   └── templates.py      # default Jinja subjects/messages (English + Arabic)
             ├── public/
             │   ├── images/hc_tracker_logo.svg
             │   └── js/hc_tracker_popup.js   # real-time pop-up listener (plain JS, no build)
             ├── patches/v1_2/remove_device_data_collection.py   # cleans up the removed collection feature
+            ├── patches/v1_3/helpdesk_features.py               # v1.3 settings, flow steps, cycle backfill, holidays
+            ├── translations/ar.csv   # Arabic UI translations
             ├── setup/
             │   ├── default_flows.py  # Standard HC Escalation (+4 frequency copies)
             │   ├── demo.py           # sample users + contracts for the test plan
             │   └── install.py        # roles, time zone, settings, flows
             └── hc_tracker/           # module "HC Tracker"
                 ├── doctype/
-                │   ├── hc_contract/            (.json .py .js _list.js test_)
+                │   ├── hc_contract/            (.json .py .js _list.js _calendar.js test_)
+                │   ├── hc_contact_log/         (calls / emails with the client, follow-ups)
                 │   ├── hc_cycle/               (child: history)
+                │   ├── hc_engineer_leave/      (engineer unavailability)
+                │   ├── hc_holiday/             (public holidays; Qatar defaults seeded)
                 │   ├── hc_notification_flow/   (.json .py .js _list.js test_)
                 │   ├── hc_notification_step/   (child: one row per escalation step)
                 │   ├── hc_notification_log/    (.json .py .js _list.js)
+                │   ├── hc_reschedule/          (child: reschedule history)
                 │   └── hc_settings/            (single)
-                ├── number_card/   (Due This Month, Overdue, Awaiting Sign-off, Notifications Failed Today)
-                ├── report/upcoming_health_checks/   (Script Report)
+                ├── dashboard_chart/         (Completed per Month, On-time vs Late, Avg Days Due to Sign-off, Due per Month)
+                ├── dashboard_chart_source/hc_tracker_metrics/
+                ├── number_card/   (Due This Month, Overdue, Awaiting Sign-off, Notifications Failed Today,
+                │                   Follow-ups Due Today)
+                ├── report/
+                │   ├── upcoming_health_checks/   (Script Report)
+                │   ├── helpdesk_to_do/           (Script Report)
+                │   ├── hc_management_summary/    (Script Report + chart)
+                │   └── hc_audit_trail/           (Script Report, from document versions)
                 ├── sidebar/hc_tracker/              (v16 sidebar)
-                └── workspace/hc_tracker/            (workspace with shortcuts + number cards)
+                └── workspace/hc_tracker/            (workspace with shortcuts, number cards + charts)
 ```
 
 ---
@@ -130,6 +154,15 @@ frappe-healthchecker/
   twice) is created and a real-time event `hc_tracker_popup` is pushed. `hc_tracker_popup.js` (loaded on every desk page)
   shows a dialog with an **Open Contract** button and an optional browser desktop notification. Users who were offline
   still find the message under the bell.
+* **Working days**: Friday and Saturday are the weekend by default, and **HC Holiday** holds public holidays
+  (Qatar National Day 18 Dec and National Sport Day are seeded; add the Eid dates each year). When *Skip Weekends and
+  Holidays* is on, the daily job does nothing on a non-working day, and a step that would fall on one is moved: "before"
+  reminders to the previous working day, all others to the next. A skipped day is still caught up.
+* **Reschedules**: changing a booked *Scheduled Date* asks for a *Reschedule Reason* (and an optional note). A row
+  is added to *Reschedule History*, the engineer gets step 8 *HC rescheduled* (CC helpdesk), and the "before scheduled
+  date" reminders (prep, client visit reminder) are sent again for the new date.
+* **Pausing**: *Reminders Paused Until* (set directly or from a contact log entry, e.g. "client asked for later date")
+  holds back date-based reminders. Steps ticked *Ignore Pause* (the overdue escalation in the default flows) still fire.
 * **Teams**: payload is `{"type":"message","attachments":[{"contentType":"application/vnd.microsoft.card.adaptive",...}]}`
   (Adaptive Card 1.4). This is the format the Teams **Workflows** webhook expects, not the retired Office 365 connector
   `MessageCard`.
@@ -272,8 +305,18 @@ Emails go through the **Email Queue** (sent by the `queue-short` / `queue-long` 
 | Renewal Alert Days (60) | Account Manager alert this many days before `contract_end` |
 | Enable Teams / Default Teams Webhook URL | Teams Workflows webhook (see below) |
 | Enable Pop-up Notifications | on-screen pop-up + bell for system-user recipients |
+| Weekend Days (`Friday,Saturday`) | non-working weekdays, comma separated |
+| Skip Weekends and Holidays (on) | no daily run on weekends / HC Holidays; reminders move to working days |
+| Block Unavailable Bookings (off) | off: warn when booking on leave / a holiday / a double booking; on: refuse the save |
+| Booking Request Subject / Message | optional Jinja override of the booking-request email |
+| Enable Helpdesk To-Do (on) | daily to-do email + pop-up to HC Helpdesk users |
+| Book-Now Horizon (45 days) | unbooked contracts due within this many days appear under *Book now* |
+| Client Reply Wait (3 days) | after a booking request, the contract moves to *Awaiting client reply* after this many days |
+| Summary Frequency (Weekly) / Summary Recipients | management summary: Weekly (Sunday, previous 7 days), Monthly (1st, previous month) or Off. Technical Managers always receive it |
+| Notification Language (English) | English, Arabic or English + Arabic (bilingual) emails, digests and to-do lists |
 
-Buttons under **Test**: *Send Test Email*, *Send Test Teams Card*, *Send Test Pop-up To Me*, *Run Daily Job Now*.
+Buttons under **Test**: *Send Test Email*, *Send Test Teams Card*, *Send Test Pop-up To Me*, *Run Daily Job Now*,
+*Send Helpdesk To-Do Now*, *Send Management Summary Now*.
 
 **Teams Workflows webhook**: in the Teams channel, open **… > Workflows > "Post to a channel when a webhook request is
 received"**. Pick the team and channel, then copy the generated URL into *Default Teams Webhook URL*. If you build
@@ -303,17 +346,27 @@ Open a flow and edit the **Escalation Steps** table (click a row's edit icon for
   * *Contract Field* (`assigned_engineer`, `account_manager`, `helpdesk_contact`, `technical_manager`);
   * *Role* (all enabled users with the role);
   * *Specific User*;
-  * *Email Address* (one or more, comma separated).
+  * *Email Address* (one or more, comma separated);
+  * *Client Contact* (the contract's *Client Contact Email* + *Client CC Emails*).
 
   Plus an optional **Fallback Role** and a **CC** of the same types.
 * **When**: *Days before due date*, *Days after due date (overdue)*, *Days before scheduled date*,
-  *Days after previous step if not resolved* (+ *After Step No*), or *On status change* (+ *On Status*).
-  These are combined with *Trigger Days*, *Only If Status In*, *Stop When Status* and *Repeat Every (days)*.
+  *Days after previous step if not resolved* (+ *After Step No*), *On status change* (+ *On Status*), or
+  *On reschedule*. These are combined with *Trigger Days*, *Only If Status In*, *Stop When Status*,
+  *Repeat Every (days)* and *Ignore Pause*.
 * **How**: *Channel* (Email, Teams, Email + Teams, System Notification), *Also Show Pop-up*, and an optional per-step
   *Teams Webhook URL*.
 * **Message**: Jinja *Subject Template* / *Message Template*. Leave them empty to use the defaults. Variables are
   `doc`, `step`, `flow`, `days_left`, `days_overdue`, `due_date`, `scheduled_date`, `days_to_scheduled`,
-  `contract_url`, `cycle_label`, `today`, `event_status` and `last_cycle`.
+  `contract_url`, `cycle_label`, `today`, `event_status` and `last_cycle` (plus `old_scheduled_date`,
+  `reschedule_reason` and `reschedule_note` for *On reschedule* steps). *Subject / Message Template (Arabic)* are used
+  when *Notification Language* is Arabic or English + Arabic.
+
+Default steps in every flow: 1 Helpdesk, 2 Assigned Engineer - HC booked, 3 Assigned Engineer - prep reminder,
+4 Technical Manager, 5 Overdue escalation, 6 Report sent - Account Manager, 7 Helpdesk follow-up (not booked), and
+since v1.3 **8 Assigned Engineer - HC rescheduled** (On reschedule, CC helpdesk) and **9 Client - visit reminder**
+(Client Contact, 1 day before the booked date for Monthly and 2 days for the others, CC helpdesk). Upgrading adds
+steps 8 and 9 and the Arabic templates to the standard flows; flows you created yourself are not changed.
 
 Save, then click **Test Flow**. Pick a contract and a date to see which steps would fire, to whom, on which
 channels, and the rendered subject. Nothing is sent or logged. You can tick **Is Default** on another flow (only one
@@ -327,7 +380,11 @@ default is allowed), and you can pin a specific flow on a contract (*Notificatio
 * It runs, in order:
   1. every open contract's flow;
   2. the overdue digest;
-  3. contract renewal alerts.
+  3. contract renewal alerts;
+  4. the helpdesk to-do email;
+  5. the management summary (only on its day: Sunday for Weekly, the 1st for Monthly).
+
+  On a weekend day or HC Holiday (with *Skip Weekends and Holidays* on) only the management summary is checked.
 
   Each part commits separately, and errors go to **Error Log**.
 
@@ -425,3 +482,34 @@ the patch `hc_tracker.patches.v1_2.remove_device_data_collection`, which deletes
 * the related settings.
 
 Reports already attached to contracts are kept.
+
+---
+
+## 13. Helpdesk features (v1.3)
+
+Everything below is on the **HC Contract** form under the **Helpdesk** button group, on the contract list, or in the
+**HC Tracker** workspace. Upgrading an existing site is just `bench migrate` (section 10); the patch
+`hc_tracker.patches.v1_3.helpdesk_features` sets the new defaults, adds steps 8 and 9 to the standard flows, fills
+the due date / sign-off date / days late on existing cycle rows, seeds the Qatar holidays and lets HC Helpdesk use
+Data Import.
+
+| Feature | Where | What it does |
+|---|---|---|
+| **Booking Calendar** | Contract list > *Booking Calendar*, workspace shortcut | Month / week / day view. Booked HCs show by *Scheduled Date* (blue), unbooked ones by *Next Due Date* ("Due: …"). Holidays are shaded; filter by engineer to also shade their leave. Drag a "Due" item to a day to **book** it (status → Scheduled); drag a booked item to **reschedule** it (reason "Changed in calendar"). |
+| **Book / Reschedule dialog** | *Helpdesk > Book Health Check* (or *Reschedule*) | Pick a date and see, live, whether it is a weekend or holiday, whether the engineer is on leave, and the engineer's other bookings that week. Rescheduling asks for a reason and an optional note. |
+| **Availability checks** | on save | Booking on a weekend, a holiday, an engineer's leave day or a day the engineer already has another HC shows a warning (or blocks the save with *Block Unavailable Bookings*). |
+| **Engineer leave / holidays** | *HC Engineer Leave*, *HC Holiday* | Helpdesk and Technical Managers record leave and public holidays. Saving leave that overlaps already booked HCs lists them so they can be moved. |
+| **Booking request email** | *Helpdesk > Send Booking Request* | Prefilled email to the client contact (CC the client CC list) with up to three proposed dates. It is sent from the Office 365 account, stored as a Communication on the contract timeline (with an incoming Email Account, client replies are linked to it), and logged in the contact log. |
+| **Contact log + follow-ups** | *Helpdesk > Log Contact Attempt*, *Contact History*, *HC Contact Log* list | Record calls / emails / Teams / WhatsApp, the outcome, a follow-up date and an optional *pause reminders until*. A "date confirmed" outcome offers to book the HC straight away. Engineers cannot see contact logs of other engineers' clients. |
+| **Client visit reminder** | flow step 9 | Email to the client contact 1–2 days before the booked visit, CC helpdesk. |
+| **Reschedule history** | contract *Current Cycle* tab | Every date change with old date, new date, reason, note, who and when; the engineer is told (step 8). |
+| **Helpdesk to-do** | daily email + pop-up, *Helpdesk To-Do* report | Five lists: follow-ups due today, awaiting client reply, book now, confirm with client (booked in the next 2 working days) and overdue, each with the client contact's name and phone. *HC Settings > Send Helpdesk To-Do Now* sends it on demand. |
+| **Management summary** | weekly / monthly email, *HC Management Summary* report | Per client or per engineer: completed, on time, late, on-time %, average days from due date to sign-off, pending and overdue. Technical / Account Managers only. |
+| **Performance charts** | workspace | Completed per month, on-time vs late and average days due → sign-off (last 12 months); due per month (overdue + next 12 months). Engineers see only their own contracts. |
+| **Excel import** | Contract list > *Import > Download Excel Template* / *Import from Excel* | Template with the contract columns and a Help sheet; the import uses Frappe's Data Import, so errors are listed per row. Technical Managers (and System Managers) only. |
+| **Audit trail** | *HC Audit Trail* report | Who changed status, dates, frequency, engineer / managers, report, flow, reminders pause or contract end, plus sign-offs and reschedules, from the document version history. Technical Managers only. |
+| **Arabic** | user language, *Notification Language* | Users whose language is Arabic get the desk in Arabic (RTL) with all HC Tracker labels translated. Notifications can be English, Arabic or bilingual; each default step has an Arabic subject and message you can edit in the flow. |
+
+Contract fields added for these features: *Client Contact Name / Email / Phone*, *Client CC Emails*,
+*Preferred Contact Method*, *Reminders Paused Until*, *Reschedule Reason / Note* and the read-only
+*Last Contact On / Outcome*, *Booking Request Sent On* and *Last Rescheduled On*.

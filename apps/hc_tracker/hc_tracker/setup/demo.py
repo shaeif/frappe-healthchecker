@@ -119,17 +119,25 @@ def create_test_contracts(base_date=None):
 def delete_test_data():
 	for name in frappe.get_all("HC Contract", filters={"name": ["like", "T-%"]}, pluck="name"):
 		frappe.db.delete("HC Notification Log", {"contract": name})
+		frappe.db.delete("HC Contact Log", {"contract": name})
+		frappe.db.delete("Communication", {"reference_doctype": "HC Contract", "reference_name": name})
 		frappe.delete_doc("HC Contract", name, force=True, ignore_permissions=True)
 	for email, _first, _roles in TEST_USERS:
+		frappe.db.delete("HC Engineer Leave", {"engineer": email})
 		if frappe.db.exists("User", email):
 			frappe.delete_doc("User", email, force=True, ignore_permissions=True)
 	frappe.db.commit()
 	return "deleted"
 
 
-def configure_test_settings(teams_webhook_url: str | None = None):
-	"""HC Settings used by the test plan (Technical Manager fallback, digest, pop-ups)."""
+def configure_test_settings(teams_webhook_url: str | None = None, working_days: int = 0):
+	"""HC Settings used by the test plan (Technical Manager fallback, digest, pop-ups).
+
+	working_days=0 turns off "Skip Weekends and Holidays" so the expected results of the
+	test plan do not depend on the weekday it is run on; section 15 turns it back on.
+	"""
 	settings = frappe.get_single("HC Settings")
+	settings.skip_non_working_days = 1 if int(working_days) else 0
 	settings.default_technical_manager = f"tm@{TEST_DOMAIN}"
 	settings.digest_recipients = f"noc@{TEST_DOMAIN}"
 	settings.enable_daily_digest = 1

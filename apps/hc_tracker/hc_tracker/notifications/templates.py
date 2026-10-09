@@ -220,7 +220,7 @@ CLIENT_REMINDER_MESSAGE_AR = """<p>عزيزنا {{ doc.client_contact_name or "�
 BOOKING_REQUEST_SUBJECT = "Network health check booking - {{ doc.client_name }} (due {{ due_date }})"
 BOOKING_REQUEST_MESSAGE = """<p>Dear {{ doc.client_contact_name or "Customer" }},</p>
 <p>Your {{ doc.frequency | lower }} network health check is due on <b>{{ due_date }}</b>.
-Please let us know which of the following dates suits you{% if not proposed_dates %} (or propose a date){% endif %}:</p>
+{% if proposed_dates %}Please let us know which of the following dates suits you (or propose another date):{% else %}Please propose a date that suits you.{% endif %}</p>
 {% if proposed_dates %}<ul>{% for d in proposed_dates %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
 <p>Scope: {{ doc.scope or "as per contract" }}</p>
 <p>Simply reply to this email with your preferred date and time window.</p>

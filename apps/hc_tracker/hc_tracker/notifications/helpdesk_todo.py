@@ -47,7 +47,7 @@ def build_todo(on_date=None) -> dict[str, list[dict]]:
 	# Follow-ups from the contact log (latest log per contract with follow_up_on <= today)
 	logs = frappe.get_all(
 		"HC Contact Log",
-		filters={"follow_up_on": ["<=", on_date]},
+		filters=[["follow_up_on", "is", "set"], ["follow_up_on", "<=", on_date]],
 		fields=["name", "contract", "follow_up_on", "outcome", "notes", "contact_on"],
 		order_by="contact_on desc",
 	)

@@ -26,7 +26,7 @@ def due_this_month(filters=None):
 
 @frappe.whitelist()
 def overdue(filters=None):
-	f = {"next_due_date": ["<", today()], "status": ["!=", "Signed off"]}
+	f = [["next_due_date", "is", "set"], ["next_due_date", "<", today()], ["status", "!=", "Signed off"]]
 	return {
 		"value": _count("HC Contract", f),
 		"fieldtype": "Int",
@@ -59,7 +59,7 @@ def notifications_failed_today(filters=None):
 
 @frappe.whitelist()
 def follow_ups_due_today(filters=None):
-	f = {"follow_up_on": ["<=", today()]}
+	f = [["follow_up_on", "is", "set"], ["follow_up_on", "<=", today()]]
 	names = {r.contract for r in frappe.get_list("HC Contact Log", filters=f, fields=["contract"], limit_page_length=0)}
 	open_names = set(frappe.get_list("HC Contract", filters={"status": "Not started", "name": ["in", list(names) or [""]]}, pluck="name"))
 	return {

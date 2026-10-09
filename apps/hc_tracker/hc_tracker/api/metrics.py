@@ -17,7 +17,7 @@ def _months(start, count):
 
 
 def _label(d):
-	return getdate(d).strftime("%b %Y")
+	return getdate(d).strftime("%b %y")
 
 
 def _cycles():
