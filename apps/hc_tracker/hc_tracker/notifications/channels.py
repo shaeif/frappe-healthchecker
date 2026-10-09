@@ -29,15 +29,22 @@ def send_email(recipients: list[str], cc: list[str], subject: str, message: str,
 	if not recipients:
 		raise DeliveryError(_("No email recipients resolved"))
 
-	frappe.sendmail(
-		recipients=recipients,
-		cc=cc or None,
-		subject=subject,
-		message=message,
-		reference_doctype="HC Contract" if reference_name else None,
-		reference_name=reference_name,
-		delayed=True,
-	)
+	try:
+		frappe.sendmail(
+			recipients=recipients,
+			cc=cc or None,
+			subject=subject,
+			message=message,
+			reference_doctype="HC Contract" if reference_name else None,
+			reference_name=reference_name,
+			delayed=True,
+		)
+	except frappe.OutgoingEmailError:
+		# Do not show Frappe's message to the user who triggered the save; it is logged instead
+		frappe.clear_last_message()
+		raise DeliveryError(
+			_("No default outgoing Email Account. Configure the Office 365 Email Account (Default Outgoing).")
+		)
 
 
 # ---------------------------------------------------------------------------
