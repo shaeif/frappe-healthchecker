@@ -241,7 +241,7 @@
   {
    "fieldname": "devices_tab",
    "fieldtype": "Tab Break",
-   "label": "Devices (Phase 2)",
+   "label": "Devices",
    "permlevel": 1
   },
   {
@@ -265,7 +265,7 @@
    "group": "Health Check"
   }
  ],
- "modified": "2026-10-10 09:00:00.000000",
+ "modified": "2026-10-10 09:30:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Contract",

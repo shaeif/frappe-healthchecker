@@ -201,8 +201,9 @@ def update_device_rows(results):
 					"software_version": f.get("software_version"),
 					"serial_number": f.get("serial_number"),
 					"uptime_text": f.get("uptime_text"),
-					"cpu_percent": f.get("cpu_percent"),
-					"memory_percent": f.get("memory_percent"),
+					# Percent columns are NOT NULL: 0 means "not reported by this platform"
+					"cpu_percent": f.get("cpu_percent") or 0,
+					"memory_percent": f.get("memory_percent") or 0,
 				}
 			)
 			if f.get("model"):
@@ -229,8 +230,8 @@ def fill_run(run, results, findings, summary):
 				"model": f.get("model"),
 				"serial_number": f.get("serial_number"),
 				"uptime_text": f.get("uptime_text"),
-				"cpu_percent": f.get("cpu_percent"),
-				"memory_percent": f.get("memory_percent"),
+				"cpu_percent": f.get("cpu_percent") or 0,
+				"memory_percent": f.get("memory_percent") or 0,
 				"ha_state": ha.strip() or None,
 				"duration": r.duration,
 				"device_row": r.row_name,

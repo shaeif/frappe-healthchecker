@@ -113,6 +113,8 @@ def create_test_contracts(base_date=None):
 def delete_test_data():
 	for name in frappe.get_all("HC Contract", filters={"name": ["like", "T-%"]}, pluck="name"):
 		frappe.db.delete("HC Notification Log", {"contract": name})
+		for run in frappe.get_all("HC Collection Run", filters={"contract": name}, pluck="name"):
+			frappe.delete_doc("HC Collection Run", run, force=True, ignore_permissions=True)
 		frappe.delete_doc("HC Contract", name, force=True, ignore_permissions=True)
 	for email, _first, _roles in TEST_USERS:
 		if frappe.db.exists("User", email):

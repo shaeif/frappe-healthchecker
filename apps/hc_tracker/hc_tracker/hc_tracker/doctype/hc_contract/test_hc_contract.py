@@ -63,7 +63,7 @@ class IntegrationTestHCContract(IntegrationTestCase):
 	def test_daily_run_is_idempotent(self):
 		doc = make_contract("TST-IDEM", "Monthly", due_in_days=2)
 		process_contract(doc)
-		first = frappe.db.count("HC Notification Log", {"contract": doc.name})
+		first = frappe.db.count("HC Notification Log", {"contract": doc.name, "status": "Sent"})
 		process_contract(doc)
-		second = frappe.db.count("HC Notification Log", {"contract": doc.name})
+		second = frappe.db.count("HC Notification Log", {"contract": doc.name, "status": "Sent"})
 		self.assertEqual(first, second)

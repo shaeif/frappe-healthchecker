@@ -245,7 +245,56 @@ button. The digest posts an orange "Attention" card listing the overdue contract
 
 ---
 
-## 15. Clean up
+## 15. Phase 2 – device data collection (lab simulator)
+
+Prerequisite: `.env` has `LAB_DEVICE_PASSWORD` and `LAB_DEVICE_API_KEY`, and the stack runs with the lab override:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.lab.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.lab.yml ps lab-devices     # healthy
+b execute hc_tracker.setup.demo.create_lab_contract --kwargs '{"password": "<LAB_DEVICE_PASSWORD>", "api_key": "<LAB_DEVICE_API_KEY>"}'
+```
+Contract **T-LAB** has 7 devices (assigned engineer eng1@hc.test when the test users exist).
+
+1. **Start a collection.** Log in as **eng1@hc.test**, open T-LAB, and go to **Devices > Collect Device Data > Yes**.
+   An alert "Collection HCCR-… started" appears with a progress bar. After about 10 s the form reloads and a pop-up
+   "[HC] Device data partial: Lab Simulator Client (3 critical, 7 warnings)" appears.
+2. **HC Collection Run** (*Devices > Collection Runs*) should show:
+   * Status **Partial**: 7 devices, 6 collected, 1 failed (SW-ACCESS-09, nothing listening);
+   * attachments `HCCR-…-hc-report.pdf` and `HCCR-…-raw-output.zip`.
+   * **Findings**:
+     * Critical: FGT-DOHA-01 *HA configuration not synchronised*
+     * Critical: PA-DOHA-01 *License expired: Threat Prevention*
+     * Critical: SW-ACCESS-09 *Data collection failed*
+     * Warning: FGT-DOHA-01 *High memory utilisation (91%)*
+     * Warning: FGT-DOHA-01 *License expiring in 20 days: antivirus*
+     * Warning: N9K-CORE *Long uptime (412 days)*
+     * Warning: PA-DOHA-01 *Long uptime (520 days)*
+     * Warning: PA-DOHA-01 *License expiring in 45 days: Premium Support*
+     * Warning: SW-CORE-01 *High CPU utilisation (85%)*
+     * Warning: SW-CORE-01 *Long uptime (409 days)*
+     * Info: AP counts 30 / 120; software versions.
+3. **PDF**: open the report. It has a summary, findings with recommendations, device inventory (model, serial,
+   version, uptime, CPU, memory, HA, status) and licenses.
+   **ZIP**: one folder per device with `_summary.json` and one `.txt` per command.
+4. **Contract T-LAB > Devices**: *Last Status* Success / Failed per row. Open a row: version, serial, uptime, CPU and
+   memory are filled in. *Findings Summary* on the Current Cycle tab is filled if it was empty.
+5. **Read-only guard**: put `reload` in a device's *Extra Commands* and save. Blocked: "only read-only commands … Not
+   allowed: reload". Set *Connection Method = REST API* on a Cisco device. Blocked.
+6. **Permissions**:
+   * eng2@hc.test does not see T-LAB's runs and cannot start a collection;
+   * helpdesk@hc.test does not see the Devices tab or any HC Collection Run.
+7. **Use as Current Report**: on the run, click **Use as Current Report > Yes**. The contract status becomes
+   **Report sent**, the PDF is in *Current Report*, and am@hc.test gets step 6 (email + pop-up).
+8. **Auto-collect**: enable *HC Settings > Auto Collect On Scheduled Date*. A contract with *Scheduled Date = today*,
+   status Scheduled and enabled devices is collected by the daily job
+   (`b execute hc_tracker.notifications.scheduler.run_daily` → `"auto_collections": 1`). It runs only once per day.
+9. **Thresholds**: set *CPU Warning Threshold* to 90 and *Run Again*. The SW-CORE-01 CPU warning disappears.
+
+Real devices: add rows with your device IPs and credentials (see README §12 *Device preparation*) and repeat steps 1–4.
+
+---
+
+## 16. Clean up
 
 ```bash
 b execute hc_tracker.setup.demo.delete_test_data
@@ -258,6 +307,6 @@ production.
 
 ```bash
 b set-config allow_tests true
-b run-tests --app hc_tracker          # 6 tests: default flows, interval/period labels, report -> Report sent,
-                                      # blocked sign-off, due-date roll-over, idempotent daily run
+b run-tests --app hc_tracker          # 11 tests: flows, period labels, report -> Report sent, blocked sign-off,
+                                      # due-date roll-over, idempotent daily run, device parsers, findings rules
 ```
