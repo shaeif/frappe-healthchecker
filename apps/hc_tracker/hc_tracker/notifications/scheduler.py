@@ -20,6 +20,7 @@ from hc_tracker.notifications.engine import (
 	users_with_role,
 	write_log,
 )
+from hc_tracker.collectors.jobs import run_auto_collections
 from hc_tracker.utils import ROLE_TECHNICAL_MANAGER, get_settings, get_today, split_list
 
 DIGEST_LABEL = "Daily overdue digest"
@@ -33,6 +34,7 @@ def run_daily(on_date=None):
 		("flow_logs", run_notification_flows),
 		("digest", send_overdue_digest),
 		("renewal_alerts", send_renewal_alerts),
+		("auto_collections", run_auto_collections),
 	):
 		try:
 			summary[key] = job(on_date)

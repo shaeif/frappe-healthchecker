@@ -50,6 +50,7 @@ def setup_settings():
 	settings.renewal_alert_days = 60
 	settings.enable_daily_digest = 1
 	settings.enable_popup_notifications = 1
+	set_collection_defaults(settings)
 	settings.flags.ignore_mandatory = True
 	settings.save(ignore_permissions=True)
 
@@ -65,3 +66,22 @@ def add_roles(user: str, roles):
 	doc.add_roles(*roles)
 	frappe.db.commit()
 	return frappe.get_roles(user)
+
+
+COLLECTION_DEFAULTS = {
+	"enable_device_collection": 1,
+	"fill_findings_summary": 1,
+	"collection_parallelism": 4,
+	"device_timeout": 60,
+	"cpu_threshold": 80,
+	"memory_threshold": 85,
+	"uptime_threshold_days": 365,
+	"license_warning_days": 60,
+}
+
+
+def set_collection_defaults(settings):
+	"""Phase 2 settings defaults (only fills empty values)."""
+	for field, value in COLLECTION_DEFAULTS.items():
+		if not settings.get(field):
+			settings.set(field, value)

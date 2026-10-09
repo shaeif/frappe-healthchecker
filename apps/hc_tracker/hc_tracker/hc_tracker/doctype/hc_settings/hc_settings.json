@@ -15,7 +15,20 @@
   "enable_teams",
   "default_teams_webhook_url",
   "popup_section",
-  "enable_popup_notifications"
+  "enable_popup_notifications",
+  "collection_section",
+  "enable_device_collection",
+  "auto_collect_on_scheduled_date",
+  "fill_findings_summary",
+  "column_break_collection",
+  "collection_parallelism",
+  "device_timeout",
+  "thresholds_section",
+  "cpu_threshold",
+  "memory_threshold",
+  "column_break_thresholds",
+  "uptime_threshold_days",
+  "license_warning_days"
  ],
  "fields": [
   {
@@ -87,12 +100,86 @@
    "fieldname": "enable_popup_notifications",
    "fieldtype": "Check",
    "label": "Enable Pop-up Notifications"
+  },
+  {
+   "fieldname": "collection_section",
+   "fieldtype": "Section Break",
+   "label": "Device Data Collection"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_device_collection",
+   "fieldtype": "Check",
+   "label": "Enable Device Data Collection"
+  },
+  {
+   "description": "The daily job collects data for contracts whose Scheduled Date is today.",
+   "fieldname": "auto_collect_on_scheduled_date",
+   "fieldtype": "Check",
+   "label": "Auto Collect On Scheduled Date"
+  },
+  {
+   "default": "1",
+   "description": "Copy the automated findings into the contract's Findings Summary when it is empty.",
+   "fieldname": "fill_findings_summary",
+   "fieldtype": "Check",
+   "label": "Fill Findings Summary"
+  },
+  {
+   "fieldname": "column_break_collection",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "4",
+   "fieldname": "collection_parallelism",
+   "fieldtype": "Int",
+   "label": "Devices In Parallel"
+  },
+  {
+   "default": "60",
+   "fieldname": "device_timeout",
+   "fieldtype": "Int",
+   "label": "Device Timeout (seconds)"
+  },
+  {
+   "fieldname": "thresholds_section",
+   "fieldtype": "Section Break",
+   "label": "Health Check Thresholds"
+  },
+  {
+   "default": "80",
+   "fieldname": "cpu_threshold",
+   "fieldtype": "Percent",
+   "label": "CPU Warning Threshold"
+  },
+  {
+   "default": "85",
+   "fieldname": "memory_threshold",
+   "fieldtype": "Percent",
+   "label": "Memory Warning Threshold"
+  },
+  {
+   "fieldname": "column_break_thresholds",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "365",
+   "description": "Long uptime usually means the device has not been patched.",
+   "fieldname": "uptime_threshold_days",
+   "fieldtype": "Int",
+   "label": "Uptime Warning (days)"
+  },
+  {
+   "default": "60",
+   "fieldname": "license_warning_days",
+   "fieldtype": "Int",
+   "label": "License Expiry Warning (days)"
   }
  ],
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-08 10:00:00.000000",
+ "modified": "2026-10-10 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Settings",

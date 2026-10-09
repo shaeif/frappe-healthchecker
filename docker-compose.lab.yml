@@ -1,0 +1,29 @@
+# Optional lab: simulated network devices for testing Phase 2 (device data collection)
+# without real hardware. Use together with the main file:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.lab.yml up -d
+#
+# Devices (host name "lab-devices" inside the Docker network):
+#   SSH 2201 Cisco IOS-XE C9300 · 2202 NX-OS · 2203 AireOS WLC · 2204 Catalyst 9800
+#   HTTPS 8443 Palo Alto XML API · 9443 FortiGate REST API
+# Credentials: LAB_DEVICE_USERNAME / LAB_DEVICE_PASSWORD / LAB_DEVICE_API_KEY from .env
+
+services:
+  lab-devices:
+    image: ${CUSTOM_IMAGE:-hc-tracker}:${CUSTOM_TAG:-latest}
+    pull_policy: never
+    restart: unless-stopped
+    networks:
+      - frappe_network
+    entrypoint: []
+    working_dir: /home/frappe/frappe-bench/apps/hc_tracker
+    command: ["/home/frappe/frappe-bench/env/bin/python", "-m", "hc_tracker.collectors.simulator"]
+    environment:
+      LAB_DEVICE_USERNAME: ${LAB_DEVICE_USERNAME:-hcadmin}
+      LAB_DEVICE_PASSWORD: ${LAB_DEVICE_PASSWORD:?Set LAB_DEVICE_PASSWORD in .env}
+      LAB_DEVICE_API_KEY: ${LAB_DEVICE_API_KEY:?Set LAB_DEVICE_API_KEY in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "wait-for-it -q -t 2 127.0.0.1:2201 && wait-for-it -q -t 2 127.0.0.1:8443"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

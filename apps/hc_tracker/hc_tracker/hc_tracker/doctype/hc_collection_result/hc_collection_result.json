@@ -1,0 +1,134 @@
+{
+ "actions": [],
+ "creation": "2026-10-10 09:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "hostname",
+  "ip_address",
+  "vendor",
+  "method",
+  "status",
+  "software_version",
+  "model",
+  "serial_number",
+  "column_break_result",
+  "uptime_text",
+  "cpu_percent",
+  "memory_percent",
+  "ha_state",
+  "duration",
+  "device_row",
+  "error"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "hostname",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hostname"
+  },
+  {
+   "fieldname": "ip_address",
+   "fieldtype": "Data",
+   "label": "IP Address"
+  },
+  {
+   "columns": 2,
+   "fieldname": "vendor",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Vendor"
+  },
+  {
+   "fieldname": "method",
+   "fieldtype": "Data",
+   "label": "Method"
+  },
+  {
+   "columns": 1,
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Success\nPartial\nFailed"
+  },
+  {
+   "columns": 2,
+   "fieldname": "software_version",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Software Version"
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fieldname": "serial_number",
+   "fieldtype": "Data",
+   "label": "Serial Number"
+  },
+  {
+   "fieldname": "column_break_result",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "uptime_text",
+   "fieldtype": "Data",
+   "label": "Uptime"
+  },
+  {
+   "columns": 1,
+   "fieldname": "cpu_percent",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "CPU %"
+  },
+  {
+   "columns": 1,
+   "fieldname": "memory_percent",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Memory %"
+  },
+  {
+   "fieldname": "ha_state",
+   "fieldtype": "Data",
+   "label": "HA"
+  },
+  {
+   "fieldname": "duration",
+   "fieldtype": "Float",
+   "label": "Duration (s)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "device_row",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Device Row"
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-10 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HC Tracker",
+ "name": "HC Collection Result",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

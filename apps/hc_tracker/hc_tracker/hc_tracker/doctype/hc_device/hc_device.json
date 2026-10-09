@@ -18,7 +18,18 @@
   "password",
   "enable_secret",
   "api_key",
+  "verify_ssl",
+  "extra_commands",
+  "results_section",
+  "last_status",
   "last_collected_on",
+  "software_version",
+  "serial_number",
+  "column_break_results",
+  "uptime_text",
+  "cpu_percent",
+  "memory_percent",
+  "last_error",
   "notes"
  ],
  "fields": [
@@ -35,7 +46,8 @@
    "fieldname": "ip_address",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "IP Address / FQDN"
+   "label": "IP Address / FQDN",
+   "reqd": 1
   },
   {
    "columns": 2,
@@ -43,17 +55,17 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Vendor / Platform",
-   "options": "Cisco IOS-XE\nCisco IOS\nCisco NX-OS\nCisco AireOS WLC\nCisco Catalyst 9800 WLC\nPalo Alto PAN-OS\nFortiGate FortiOS"
+   "options": "Cisco IOS-XE\nCisco IOS\nCisco NX-OS\nCisco AireOS WLC\nCisco Catalyst 9800 WLC\nPalo Alto PAN-OS\nFortiGate FortiOS",
+   "reqd": 1
   },
   {
-   "columns": 2,
    "fieldname": "device_role",
    "fieldtype": "Select",
-   "in_list_view": 1,
    "label": "Device Role",
    "options": "Switch\nWireless Controller\nFirewall\nRouter\nOther"
   },
   {
+   "description": "Filled automatically by the collection when found.",
    "fieldname": "model",
    "fieldtype": "Data",
    "label": "Model"
@@ -72,12 +84,14 @@
   },
   {
    "default": "SSH (Netmiko)",
+   "description": "REST API is available for Palo Alto (XML API) and FortiGate (REST API token). Cisco uses SSH.",
    "fieldname": "connection_method",
    "fieldtype": "Select",
    "label": "Connection Method",
-   "options": "SSH (Netmiko)\nREST API\nSNMP"
+   "options": "SSH (Netmiko)\nREST API"
   },
   {
+   "description": "Empty = 22 for SSH, 443 for REST API.",
    "fieldname": "port",
    "fieldtype": "Int",
    "label": "Port"
@@ -98,15 +112,82 @@
    "label": "Enable Secret"
   },
   {
-   "description": "Palo Alto XML API key or FortiGate REST API token.",
+   "description": "Palo Alto XML API key (optional if username/password are set) or FortiGate REST API token (required).",
    "fieldname": "api_key",
    "fieldtype": "Password",
    "label": "API Key / Token"
   },
   {
+   "description": "Leave off for devices with self-signed certificates.",
+   "fieldname": "verify_ssl",
+   "fieldtype": "Check",
+   "label": "Verify SSL Certificate"
+  },
+  {
+   "description": "Optional, one per line. Only read-only commands (show / get / display / diagnose sys) are allowed.",
+   "fieldname": "extra_commands",
+   "fieldtype": "Small Text",
+   "label": "Extra Commands"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "results_section",
+   "fieldtype": "Section Break",
+   "label": "Last Collection"
+  },
+  {
+   "columns": 1,
+   "fieldname": "last_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Last Status",
+   "options": "\nSuccess\nPartial\nFailed",
+   "read_only": 1
+  },
+  {
    "fieldname": "last_collected_on",
    "fieldtype": "Datetime",
    "label": "Last Collected On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "software_version",
+   "fieldtype": "Data",
+   "label": "Software Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "serial_number",
+   "fieldtype": "Data",
+   "label": "Serial Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_results",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "uptime_text",
+   "fieldtype": "Data",
+   "label": "Uptime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cpu_percent",
+   "fieldtype": "Percent",
+   "label": "CPU %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "memory_percent",
+   "fieldtype": "Percent",
+   "label": "Memory %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last Error",
    "read_only": 1
   },
   {
@@ -118,7 +199,7 @@
  "index_web_pages_for_search": 0,
  "istable": 1,
  "links": [],
- "modified": "2026-10-08 10:00:00.000000",
+ "modified": "2026-10-10 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Device",

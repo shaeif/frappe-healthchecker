@@ -71,7 +71,7 @@ def hc_contract_has_permission(doc, ptype=None, user=None, debug=False):
 # ---------------------------------------------------------------------------
 
 
-def hc_notification_log_query(user=None, doctype=None):
+def _linked_contract_query(doctype: str, user=None):
 	user = user or frappe.session.user
 	roles = user_roles(user)
 	if _sees_everything(user, roles):
@@ -79,10 +79,19 @@ def hc_notification_log_query(user=None, doctype=None):
 	condition = _own_contract_condition(user, roles, "c")
 	if condition == "1=0":
 		return "1=0"
-	return (
-		"`tabHC Notification Log`.`contract` in "
-		f"(select c.`name` from `tabHC Contract` c where {condition})"
-	)
+	return f"`tab{doctype}`.`contract` in (select c.`name` from `tabHC Contract` c where {condition})"
+
+
+def hc_notification_log_query(user=None, doctype=None):
+	return _linked_contract_query("HC Notification Log", user)
+
+
+def hc_collection_run_query(user=None, doctype=None):
+	return _linked_contract_query("HC Collection Run", user)
+
+
+def hc_collection_run_has_permission(doc, ptype=None, user=None, debug=False):
+	return hc_notification_log_has_permission(doc, ptype, user, debug)
 
 
 def hc_notification_log_has_permission(doc, ptype=None, user=None, debug=False):

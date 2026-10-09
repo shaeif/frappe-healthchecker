@@ -35,6 +35,9 @@ class HCContract(Document):
 				"notification_timeline",
 				'<p class="text-danger">{}</p>'.format(_("Could not build the timeline. See Error Log.")),
 			)
+		from hc_tracker.collectors.jobs import can_collect
+
+		self.set_onload("can_collect", can_collect(self))
 
 	def before_validate(self):
 		if self.client_id:
@@ -44,6 +47,7 @@ class HCContract(Document):
 		self.validate_helpdesk_changes()
 		self.interval_months = get_interval_months(self.frequency)
 		self.validate_dates()
+		self.validate_devices()
 		self.set_notification_flow()
 		self.set_report_sent()
 		self.validate_scheduled()
@@ -113,6 +117,20 @@ class HCContract(Document):
 	def validate_dates(self):
 		if self.contract_start and self.contract_end and getdate(self.contract_end) < getdate(self.contract_start):
 			frappe.throw(_("Contract End cannot be before Contract Start."))
+
+	def validate_devices(self):
+		from hc_tracker.collectors.base import clean_extra_commands, is_read_only_command
+
+		for row in self.get("devices") or []:
+			if row.connection_method == "REST API" and row.vendor not in ("Palo Alto PAN-OS", "FortiGate FortiOS"):
+				frappe.throw(_("Device {0}: REST API is only available for Palo Alto and FortiGate. Use SSH (Netmiko).").format(row.hostname))
+			blocked = [c for c in clean_extra_commands(row.extra_commands) if not is_read_only_command(c)]
+			if blocked:
+				frappe.throw(
+					_("Device {0}: only read-only commands (show / get / display / diagnose sys) are allowed. Not allowed: {1}").format(
+						row.hostname, ", ".join(blocked)
+					)
+				)
 
 	def set_notification_flow(self):
 		from hc_tracker.notifications.engine import get_flow_for_frequency

@@ -146,20 +146,37 @@ const hc_tracker_contract = {
 			__("Notifications")
 		);
 
-		if (
-			frappe.user.has_role(["HC Technical Manager", "System Manager"]) &&
-			(frm.doc.devices || []).length
-		) {
+		const can_collect = frm.doc.__onload && frm.doc.__onload.can_collect;
+		if (can_collect && (frm.doc.devices || []).some((d) => d.enabled)) {
 			frm.add_custom_button(
-				__("Collect Device Data (Phase 2 stub)"),
+				__("Collect Device Data"),
 				() =>
-					frappe.call({
-						method: "hc_tracker.collectors.jobs.enqueue_collection",
-						args: { contract: frm.doc.name },
-						callback: (r) => r.message && frappe.show_alert(r.message),
-					}),
+					frappe.confirm(
+						__("Connect to the enabled devices now (read-only commands) and build a draft HC report?"),
+						() =>
+							frappe
+								.xcall("hc_tracker.collectors.jobs.enqueue_collection", { contract: frm.doc.name })
+								.then((run) => {
+									frappe.show_alert({
+										message: __("Collection {0} started. Progress is shown here.", [run]),
+										indicator: "blue",
+									});
+								})
+					),
 				__("Devices")
 			);
 		}
+		frm.add_custom_button(
+			__("Collection Runs"),
+			() => frappe.set_route("List", "HC Collection Run", { contract: frm.doc.name }),
+			__("Devices")
+		);
+		frappe.realtime.off("hc_collection_done");
+		frappe.realtime.on("hc_collection_done", (data) => {
+			if (data && data.contract === frm.doc.name) {
+				frappe.show_alert({ message: __("Device data collected: {0}", [data.run]), indicator: "green" });
+				frm.reload_doc();
+			}
+		});
 	},
 };
