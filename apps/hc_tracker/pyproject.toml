@@ -9,7 +9,6 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=16.0.0" # Installed and managed by bench.
-    "netmiko>=4.4,<5",  # Phase 2 device data collection (SSH)
 ]
 
 [build-system]

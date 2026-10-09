@@ -113,8 +113,6 @@ def create_test_contracts(base_date=None):
 def delete_test_data():
 	for name in frappe.get_all("HC Contract", filters={"name": ["like", "T-%"]}, pluck="name"):
 		frappe.db.delete("HC Notification Log", {"contract": name})
-		for run in frappe.get_all("HC Collection Run", filters={"contract": name}, pluck="name"):
-			frappe.delete_doc("HC Collection Run", run, force=True, ignore_permissions=True)
 		frappe.delete_doc("HC Contract", name, force=True, ignore_permissions=True)
 	for email, _first, _roles in TEST_USERS:
 		if frappe.db.exists("User", email):
@@ -138,59 +136,3 @@ def configure_test_settings(teams_webhook_url: str | None = None):
 	frappe.db.commit()
 	return "HC Settings configured for the test plan"
 
-
-LAB_DEVICES = [
-	# hostname, vendor, role, method, port
-	("SW-CORE-01", "Cisco IOS-XE", "Switch", "SSH (Netmiko)", 2201),
-	("N9K-CORE", "Cisco NX-OS", "Switch", "SSH (Netmiko)", 2202),
-	("WLC-01", "Cisco AireOS WLC", "Wireless Controller", "SSH (Netmiko)", 2203),
-	("WLC-9800", "Cisco Catalyst 9800 WLC", "Wireless Controller", "SSH (Netmiko)", 2204),
-	("PA-DOHA-01", "Palo Alto PAN-OS", "Firewall", "REST API", 8443),
-	("FGT-DOHA-01", "FortiGate FortiOS", "Firewall", "REST API", 9443),
-	("SW-ACCESS-09", "Cisco IOS", "Switch", "SSH (Netmiko)", 2299),  # nothing listens: shows a failed device
-]
-
-
-def create_lab_contract(password: str, api_key: str, host: str = "lab-devices", username: str = "hcadmin"):
-	"""Contract T-LAB with devices pointing at the lab simulator (docker-compose.lab.yml).
-
-	Use the same LAB_DEVICE_PASSWORD / LAB_DEVICE_API_KEY values as in .env.
-	"""
-	if not (password and api_key):
-		frappe.throw("Pass password and api_key (the LAB_DEVICE_PASSWORD / LAB_DEVICE_API_KEY values)")
-	if frappe.db.exists("HC Contract", "T-LAB"):
-		frappe.delete_doc("HC Contract", "T-LAB", force=True, ignore_permissions=True)
-	doc = frappe.new_doc("HC Contract")
-	doc.update(
-		{
-			"client_id": "T-LAB",
-			"client_name": "Lab Simulator Client",
-			"frequency": "Quarterly",
-			"next_due_date": add_days(getdate(today()), 20),
-			"status": "Scheduled",
-			"scheduled_date": getdate(today()),
-			"assigned_engineer": f"eng1@{TEST_DOMAIN}" if frappe.db.exists("User", f"eng1@{TEST_DOMAIN}") else None,
-			"account_manager": f"am@{TEST_DOMAIN}" if frappe.db.exists("User", f"am@{TEST_DOMAIN}") else None,
-			"technical_manager": f"tm@{TEST_DOMAIN}" if frappe.db.exists("User", f"tm@{TEST_DOMAIN}") else None,
-			"scope": "Lab: C9300, Nexus 9000, AireOS 5520, C9800-40, PA-3220, FortiGate 200F",
-		}
-	)
-	for hostname, vendor, role, method, port in LAB_DEVICES:
-		doc.append(
-			"devices",
-			{
-				"hostname": hostname,
-				"ip_address": host,
-				"vendor": vendor,
-				"device_role": role,
-				"connection_method": method,
-				"port": port,
-				"username": username,
-				"password": password,
-				"api_key": api_key if vendor == "FortiGate FortiOS" else None,
-				"enabled": 1,
-			},
-		)
-	doc.insert(ignore_permissions=True)
-	frappe.db.commit()
-	return doc.name

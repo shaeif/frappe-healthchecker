@@ -62,7 +62,7 @@ ENGINEER_BOOKED_MESSAGE = (
 <ul>
 <li>Confirm remote access / VPN and device credentials</li>
 <li>Review the scope and the previous HC report</li>
-<li>Prepare the collection scripts for Cisco switches / WLCs, Palo Alto and FortiGate devices</li>
+<li>Prepare the HC checklist for the Cisco switches / WLCs, Palo Alto and FortiGate devices in scope</li>
 </ul>
 <p>Scope: {{ doc.scope or "-" }}</p>"""
 	+ _FOOTER

@@ -37,9 +37,7 @@
   "notifications_tab",
   "notification_timeline",
   "history_tab",
-  "cycles",
-  "devices_tab",
-  "devices"
+  "cycles"
  ],
  "fields": [
   {
@@ -237,35 +235,17 @@
    "label": "HC Cycles",
    "options": "HC Cycle",
    "read_only": 1
-  },
-  {
-   "fieldname": "devices_tab",
-   "fieldtype": "Tab Break",
-   "label": "Devices",
-   "permlevel": 1
-  },
-  {
-   "fieldname": "devices",
-   "fieldtype": "Table",
-   "label": "Devices",
-   "options": "HC Device",
-   "permlevel": 1
   }
  ],
  "index_web_pages_for_search": 0,
  "links": [
-  {
-   "link_doctype": "HC Collection Run",
-   "link_fieldname": "contract",
-   "group": "Health Check"
-  },
   {
    "link_doctype": "HC Notification Log",
    "link_fieldname": "contract",
    "group": "Health Check"
   }
  ],
- "modified": "2026-10-10 09:30:00.000000",
+ "modified": "2026-10-11 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "HC Tracker",
  "name": "HC Contract",
@@ -322,30 +302,6 @@
    "read": 1,
    "report": 1,
    "role": "HC Helpdesk",
-   "write": 1
-  },
-  {
-   "permlevel": 1,
-   "read": 1,
-   "role": "System Manager",
-   "write": 1
-  },
-  {
-   "permlevel": 1,
-   "read": 1,
-   "role": "HC Technical Manager",
-   "write": 1
-  },
-  {
-   "permlevel": 1,
-   "read": 1,
-   "role": "HC Account Manager",
-   "write": 1
-  },
-  {
-   "permlevel": 1,
-   "read": 1,
-   "role": "HC Engineer",
    "write": 1
   }
  ],

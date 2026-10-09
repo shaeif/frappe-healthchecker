@@ -101,21 +101,3 @@ docker compose exec frontend ls -la /home/frappe/frappe-bench/assets/hc_tracker 
 | Steps never fire for a contract | Check the contract's **Notifications** tab: the reason is shown per step (status filter, no recipients, no scheduled date…). Use **Test Flow**. |
 | Port 8080 already in use | Change `HTTP_PORT` in `.env` (and `HOST_NAME`), then `docker compose up -d`. |
 
-## Device data collection (Phase 2)
-
-The per-device error is on the **HC Collection Run > Devices** table and on the device row (*Last Error*). Raw output
-is in the run's ZIP. Background errors are in **Error Log** ("HC Tracker: collection failed …").
-
-| Error | Fix |
-|---|---|
-| `Connection timed out: TCP connection to device failed` | The container cannot reach the device. Test from the worker: `docker compose exec queue-long bash -c "wait-for-it -t 5 <ip>:22"`. Check routing/VPN/firewall from the Docker host. |
-| `Authentication failed` | Wrong username/password, or SSH not allowed for that account (AAA/TACACS). Re-enter the password (Password fields show `*****`). |
-| `Pattern not detected` / `read_timeout` (Netmiko) | Slow device or unusual prompt/banner. Raise *HC Settings > Device Timeout*. Check the platform is correct (e.g. a Catalyst 9800 must be *Cisco Catalyst 9800 WLC*, not AireOS). |
-| `% Invalid input` in *command errors* (status Partial) | That command is not supported on this platform/version. Remove it from *Extra Commands*. The standard commands are listed in `collectors/platforms.py`. |
-| `TLS error (untick Verify SSL …)` | The device uses a self-signed certificate. Untick *Verify SSL Certificate*, or install a trusted certificate. |
-| `PAN-OS API error: Invalid Credential` / `403` | Check the API key, or the username/password used for keygen. The admin role needs *XML API > Operational Requests*. |
-| `FortiOS API authentication failed (HTTP 401/403)` | Wrong token, or the HC Tracker server IP is not in the REST API admin's *Trusted Hosts*. |
-| Run stays *Queued* | The `queue-long` worker is down. `docker compose ps queue-long`, `docker compose logs queue-long`. |
-| "A collection is already running" | A previous run is Queued/Running. Wait, or if the worker died, set that run's status to Failed (System Manager, *Set Value*). |
-| Button *Collect Device Data* missing | Only the assigned engineer, the account manager and Technical/System Managers see it, and at least one device must be enabled. |
-| Draft PDF missing / `wkhtmltopdf` error | Check Error Log. The official image ships wkhtmltopdf. Re-run with *Run Again*. |

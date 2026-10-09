@@ -86,14 +86,6 @@ def hc_notification_log_query(user=None, doctype=None):
 	return _linked_contract_query("HC Notification Log", user)
 
 
-def hc_collection_run_query(user=None, doctype=None):
-	return _linked_contract_query("HC Collection Run", user)
-
-
-def hc_collection_run_has_permission(doc, ptype=None, user=None, debug=False):
-	return hc_notification_log_has_permission(doc, ptype, user, debug)
-
-
 def hc_notification_log_has_permission(doc, ptype=None, user=None, debug=False):
 	user = user or frappe.session.user
 	roles = user_roles(user)

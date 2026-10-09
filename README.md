@@ -8,9 +8,8 @@ a Microsoft Teams Adaptive Card and an **on-screen pop-up + bell notification**.
 * Frappe Framework **v16** (tested on 16.50.0, Python 3.14), MariaDB 11.8, Redis 6.2
 * Image built `FROM frappe/erpnext:v16`. The site installs **only `frappe` + `hc_tracker`**; ERPNext is not installed.
 * Time zone **Asia/Qatar**. The daily job runs at **08:00** Qatar time.
-* **Phase 2 is included**: automated data collection from Cisco (Netmiko SSH), Palo Alto (XML API) and FortiGate
-  (REST API) devices. It produces automated findings, a draft PDF HC report and raw output, and comes with a lab
-  simulator for testing (section 12).
+* **Helpdesk scheduling and notification tool only.** HC Tracker never connects to client devices and stores no
+  device credentials. Engineers run the health check with their own tools and attach the report.
 
 Other documents:
 
@@ -48,7 +47,6 @@ frappe-healthchecker/
 ├── .gitignore
 ├── Dockerfile                   # FROM frappe/erpnext:v16 + apps/hc_tracker (pip install -e)
 ├── apps.json.example            # for the official "layered" image build (production path)
-├── docker-compose.lab.yml       # optional lab: simulated devices for testing data collection
 ├── docker-compose.yml           # pwd.yml layout: backend, configurator, create-site, db, frontend,
 │                                #   queue-short, queue-long, redis-cache, redis-queue, scheduler, websocket
 ├── docs/
@@ -74,17 +72,6 @@ frappe-healthchecker/
             │   ├── number_cards.py   # workspace number cards (permission aware)
             │   ├── queries.py        # "users with role X" link query
             │   └── tools.py          # test email / Teams card / pop-up buttons
-            ├── collectors/           # Phase 2: device data collection
-            │   ├── base.py           # DeviceSpec / DeviceResult, read-only command guard
-            │   ├── platforms.py      # per-vendor Netmiko driver + read-only command list
-            │   ├── ssh.py            # Netmiko SSH collector (Cisco IOS/IOS-XE/NX-OS/AireOS/9800, PAN-OS/FortiOS CLI)
-            │   ├── paloalto.py       # PAN-OS XML API collector
-            │   ├── fortinet.py       # FortiOS REST API collector
-            │   ├── parsers.py        # version / model / serial / uptime / CPU / memory / HA / license parsers
-            │   ├── rules.py          # findings engine (thresholds from HC Settings)
-            │   ├── runner.py         # parallel collection (thread pool, no DB access in threads)
-            │   ├── jobs.py           # HC Collection Run, background job, PDF + ZIP, auto-collect, notifications
-            │   └── simulator.py      # lab device simulator (fake SSH devices + PAN-OS/FortiOS APIs)
             ├── config/__init__.py
             ├── notifications/
             │   ├── channels.py       # Email, Teams Adaptive Card, System Notification (bell + pop-up)
@@ -94,8 +81,7 @@ frappe-healthchecker/
             ├── public/
             │   ├── images/hc_tracker_logo.svg
             │   └── js/hc_tracker_popup.js   # real-time pop-up listener (plain JS, no build)
-            ├── patches/v1_1/set_collection_defaults.py   # upgrade patch for existing sites
-            ├── templates/hc_collection_report.html     # draft HC report (rendered to PDF)
+            ├── patches/v1_2/remove_device_data_collection.py   # cleans up the removed collection feature
             ├── setup/
             │   ├── default_flows.py  # Standard HC Escalation (+4 frequency copies)
             │   ├── demo.py           # sample users + contracts for the test plan
@@ -104,10 +90,6 @@ frappe-healthchecker/
                 ├── doctype/
                 │   ├── hc_contract/            (.json .py .js _list.js test_)
                 │   ├── hc_cycle/               (child: history)
-                │   ├── hc_device/              (child: devices, encrypted credentials, last results)
-                │   ├── hc_collection_run/      (.json .py .js _list.js test_ – one per collection)
-                │   ├── hc_collection_result/   (child: per-device result)
-                │   ├── hc_collection_finding/  (child: severity / finding / recommendation)
                 │   ├── hc_notification_flow/   (.json .py .js _list.js test_)
                 │   ├── hc_notification_step/   (child: one row per escalation step)
                 │   ├── hc_notification_log/    (.json .py .js _list.js)
@@ -290,8 +272,6 @@ Emails go through the **Email Queue** (sent by the `queue-short` / `queue-long` 
 | Renewal Alert Days (60) | Account Manager alert this many days before `contract_end` |
 | Enable Teams / Default Teams Webhook URL | Teams Workflows webhook (see below) |
 | Enable Pop-up Notifications | on-screen pop-up + bell for system-user recipients |
-| Device Data Collection | enable/disable; auto collect on the scheduled date; devices in parallel (4); device timeout (60 s); fill Findings Summary |
-| Health Check Thresholds | CPU 80 %, memory 85 %, uptime 365 days, license expiry warning 60 days |
 
 Buttons under **Test**: *Send Test Email*, *Send Test Teams Card*, *Send Test Pop-up To Me*, *Run Daily Job Now*.
 
@@ -425,83 +405,23 @@ docker compose exec backend bench --site hc.localhost restore /tmp/restore/<ts>-
 docker compose exec backend bench --site hc.localhost migrate
 ```
 Also back up `.env` (the encryption key is in `sites/<site>/site_config.json`, which is in the `sites` volume and in
-`*-site_config_backup.json`. You need it to read Password fields such as device credentials after a restore).
+`*-site_config_backup.json`. You need it to restore encrypted Password fields, such as the Email Account password).
 Volume-level backup: `docker run --rm -v hc-tracker_sites:/v -v $PWD/backups:/b alpine tar czf /b/sites.tgz -C /v .`
 
 ---
 
-## 12. Phase 2 – automated device data collection and draft HC report
+---
 
-### What it does
-1. On the contract's **Devices** tab, list the devices in scope:
-   * hostname, IP/FQDN, vendor/platform and role;
-   * connection method, port, username, **password / enable secret / API key**;
-   * *Verify SSL* and *Extra Commands*.
+## 12. Scope: no device data collection
 
-   Credentials are Frappe **Password** fields, encrypted with the site key and never sent to the browser. The tab
-   is permission level 1, so **Helpdesk cannot see it**.
-2. **Devices > Collect Device Data** creates an **HC Collection Run** and runs it in the background (`long` queue).
-   It is available to the assigned engineer, the account manager and Technical Managers. A progress bar appears on
-   the contract form. Optionally, the daily job collects automatically on the **Scheduled Date**
-   (*HC Settings > Auto Collect On Scheduled Date*).
-3. Devices are collected in parallel (*Devices In Parallel*, *Device Timeout*) with **read-only** commands only:
+HC Tracker is a **helpdesk tool**: it tracks contracts, due dates, bookings, reports and sign-offs, and sends the
+notifications. It does **not** connect to client devices, run commands or store device credentials. Engineers
+collect data with their own tools and attach the HC report on the contract's *Current Cycle* tab.
 
-| Platform | Method | What is collected |
-|---|---|---|
-| Cisco IOS / IOS-XE (Catalyst) | SSH – Netmiko `cisco_ios` / `cisco_xe` | show version, inventory, CPU, memory, ip int brief, logging |
-| Cisco NX-OS (Nexus) | SSH – Netmiko `cisco_nxos` | show version, inventory, system resources, interface brief, logging |
-| Cisco AireOS WLC | SSH – Netmiko `cisco_wlc_ssh` (User:/Password: login) | sysinfo, inventory, CPU, AP summary, client summary |
-| Cisco Catalyst 9800 WLC | SSH – Netmiko `cisco_xe` | IOS-XE commands + AP summary, wireless client summary |
-| Palo Alto PAN-OS | **XML API** (API key, or keygen with username/password) or SSH | system info, resources, HA state, licenses |
-| FortiGate FortiOS | **REST API** (API token) or SSH | system status, CPU/memory, uptime, HA checksums, licenses |
+An earlier build (v1.1) had an optional device-collection feature. Upgrading to v1.2 with `bench migrate` runs
+the patch `hc_tracker.patches.v1_2.remove_device_data_collection`, which deletes:
+* the collection runs, their draft PDFs and raw-output ZIPs;
+* the contract Devices table, including the encrypted device credentials;
+* the related settings.
 
-   *Extra Commands* per device are accepted only when they start with `show` / `get` / `display` /
-   `diagnose sys` / `diagnose hardware`. Anything else (e.g. `reload`, `conf t`) is rejected on save.
-4. **Findings engine** (thresholds in *HC Settings > Health Check Thresholds*):
-
-| Severity | Finding |
-|---|---|
-| Critical | collection failed |
-| Critical | HA out of sync |
-| Critical | expired license |
-| Critical | CPU ≥ 90 % |
-| Critical | memory ≥ 95 % |
-| Warning | CPU or memory above the threshold (80 % / 85 % by default) |
-| Warning | uptime over 365 days (likely unpatched) |
-| Warning | license expiring within 60 days |
-| Info | AP counts, software versions in use, commands that returned errors |
-
-5. **Results** go to several places:
-   * The **HC Collection Run** holds status (Completed / Partial / Failed), counts, the findings table, per-device
-     results, a **draft HC report PDF** and a **ZIP of raw command output** (one folder per device).
-   * Each HC Device row is updated with last status, version, serial, model, uptime, CPU, memory and last error.
-   * The contract's *Findings Summary* is filled in if it is empty.
-   * The person who started the run and the engineer get a **pop-up + bell** notification.
-6. **Use as Current Report** (on the run) attaches the draft PDF to the contract. The status becomes *Report sent*,
-   the Account Manager step fires, and the usual sign-off flow continues. You can also edit the report offline and
-   attach your final version manually instead.
-
-### Device preparation
-* **Cisco**: a read-only local/TACACS account with SSH access (privilege 15 or `show` commands authorised).
-  Fill *Enable Secret* only if the account lands in user EXEC mode.
-* **Palo Alto**: an admin role with XML API *Operational Requests* permission. Either paste an API key, or give
-  username/password and the key is generated each run (`type=keygen`).
-* **FortiGate**: *System > Administrators > Create REST API Admin* (read-only profile). Add the HC Tracker server IP to
-  *Trusted Hosts*, and paste the token into *API Key / Token*.
-* The containers must reach the devices (routing/VPN from the Docker host; SSH 22 / HTTPS 443).
-* Self-signed device certificates: leave *Verify SSL Certificate* off.
-
-### Try it without hardware (lab simulator)
-```bash
-# .env: set LAB_DEVICE_PASSWORD and LAB_DEVICE_API_KEY
-docker compose -f docker-compose.yml -f docker-compose.lab.yml up -d
-docker compose exec backend bench --site hc.localhost execute hc_tracker.setup.demo.create_lab_contract \
-  --kwargs '{"password": "<LAB_DEVICE_PASSWORD>", "api_key": "<LAB_DEVICE_API_KEY>"}'
-# open contract T-LAB > Devices > Collect Device Data   (or from the CLI:)
-docker compose exec backend bench --site hc.localhost execute hc_tracker.collectors.jobs.enqueue_collection \
-  --kwargs '{"contract": "T-LAB"}'
-```
-The simulator (`collectors/simulator.py`, service `lab-devices`) emulates a C9300 (IOS-XE), a Nexus 9000, an AireOS
-5520 WLC, a C9800 WLC, a PA-3220 (XML API) and a FortiGate 200F (REST API). Each has realistic output and planted
-problems (high CPU, long uptime, HA out of sync, expired licenses). There is also one unreachable device, so every
-finding type and a failed device show up.
+Reports already attached to contracts are kept.
