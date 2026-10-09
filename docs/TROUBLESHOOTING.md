@@ -81,6 +81,9 @@ docker compose exec frontend ls -la /home/frappe/frappe-bench/assets/hc_tracker 
 * The browser must use **the same hostname as `SITE_NAME`** (nginx sets the socket Origin to `http://SITE_NAME`).
   Use `http://hc.localhost:8080`, not `http://localhost:8080` or the server IP. In production, set `SITE_NAME` to
   the FQDN and browse to it.
+* No DNS name, only an IP? Set `SITE_NAME` to the IP, `HOST_NAME=http://<IP>` and `HTTP_PORT=80` before the site is
+  created. The port must be 80: the websocket call-back below goes to `http://<IP>` on the host, and the network
+  alias cannot redirect an IP.
 * The websocket service authenticates by calling `http://SITE_NAME/api/...`. In this compose file the frontend
   has a network alias equal to `SITE_NAME` and listens on port 80 internally for that reason. Test it:
   `docker compose exec websocket node -e "fetch('http://$S/api/method/ping').then(r=>r.text()).then(console.log)"`
@@ -88,6 +91,17 @@ docker compose exec frontend ls -la /home/frappe/frappe-bench/assets/hc_tracker 
 * Behind HTTPS (`https://FQDN`) the websocket container must resolve and reach `https://FQDN` (public DNS/hairpin NAT).
 * Missed pop-ups are always under the **bell** (Notification Log). Check *HC Settings > Enable Pop-up Notifications*
   and the step's *Also Show Pop-up*.
+
+## Containers do not start: "the docker-default profile could not be loaded" (AppArmor)
+
+Docker inside a Proxmox LXC (or another container) often cannot load AppArmor profiles:
+`apparmor_parser: Access denied. You need policy admin privileges to manage profiles.`
+Either allow AppArmor management for the container on the host, or run the stack unconfined:
+
+```bash
+cp docker-compose.apparmor.yml docker-compose.override.yml   # git-ignored, loaded automatically
+./scripts/install.sh   # or: docker compose up -d
+```
 
 ## Other common issues
 
