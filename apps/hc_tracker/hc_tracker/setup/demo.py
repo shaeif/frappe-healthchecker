@@ -119,3 +119,19 @@ def delete_test_data():
 			frappe.delete_doc("User", email, force=True, ignore_permissions=True)
 	frappe.db.commit()
 	return "deleted"
+
+
+def configure_test_settings(teams_webhook_url: str | None = None):
+	"""HC Settings used by the test plan (Technical Manager fallback, digest, pop-ups)."""
+	settings = frappe.get_single("HC Settings")
+	settings.default_technical_manager = f"tm@{TEST_DOMAIN}"
+	settings.digest_recipients = f"noc@{TEST_DOMAIN}"
+	settings.enable_daily_digest = 1
+	settings.enable_popup_notifications = 1
+	settings.renewal_alert_days = 60
+	if teams_webhook_url:
+		settings.enable_teams = 1
+		settings.default_teams_webhook_url = teams_webhook_url
+	settings.save(ignore_permissions=True)
+	frappe.db.commit()
+	return "HC Settings configured for the test plan"
