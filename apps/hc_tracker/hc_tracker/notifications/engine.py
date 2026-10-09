@@ -610,6 +610,7 @@ def process_contract(contract, on_date=None) -> int:
 	written = 0
 	for step in steps:
 		if step.trigger_mode == MODE_STATUS:
+			written += _retry_failed_status_step(contract, flow, step, steps, on_date, cycle_label, sent_map, settings)
 			continue
 		evaluation = evaluate_step(contract, step, on_date, sent_map, settings, steps)
 		if evaluation.state != STATE_DUE:
@@ -618,6 +619,35 @@ def process_contract(contract, on_date=None) -> int:
 		_mark_sent(sent_map, step.step_no, on_date, logs)
 		written += len(logs)
 	return written
+
+
+def _retry_failed_status_step(contract, flow, step, steps, on_date, cycle_label, sent_map, settings) -> int:
+	"""Daily retry for an 'On status change' step whose channel failed (e.g. no email account yet),
+	as long as the contract is still in that status and the channel never succeeded this cycle."""
+	if not cint(step.enabled) or step.on_status != contract.status:
+		return 0
+	failed = set(
+		frappe.get_all(
+			"HC Notification Log",
+			filters={
+				"contract": contract.name,
+				"flow": flow.name,
+				"period_label": cycle_label,
+				"step_no": cint(step.step_no),
+				"status": "Failed",
+			},
+			pluck="channel",
+		)
+	)
+	if not failed:
+		return 0
+	evaluation = evaluate_step(contract, step, on_date, sent_map, settings, steps, status_event=step.on_status)
+	evaluation.due_channels = [c for c in evaluation.due_channels if c in failed]
+	if evaluation.state != STATE_DUE or not evaluation.due_channels:
+		return 0
+	logs = send_step(contract, flow, step, evaluation, on_date, cycle_label, settings, status_event=step.on_status)
+	_mark_sent(sent_map, step.step_no, on_date, logs)
+	return len(logs)
 
 
 def fire_status_change(contract, new_status: str, cycle_label: str | None = None) -> int:
