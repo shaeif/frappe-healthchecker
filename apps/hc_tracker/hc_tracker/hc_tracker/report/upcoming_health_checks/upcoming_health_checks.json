@@ -1,0 +1,37 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2026-10-08 10:00:00.000000",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2026-10-08 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HC Tracker",
+ "name": "Upcoming Health Checks",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "HC Contract",
+ "report_name": "Upcoming Health Checks",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "HC Technical Manager"
+  },
+  {
+   "role": "HC Account Manager"
+  },
+  {
+   "role": "HC Engineer"
+  },
+  {
+   "role": "HC Helpdesk"
+  }
+ ]
+}
