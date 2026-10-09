@@ -52,3 +52,16 @@ def setup_settings():
 	settings.enable_popup_notifications = 1
 	settings.flags.ignore_mandatory = True
 	settings.save(ignore_permissions=True)
+
+
+def add_roles(user: str, roles):
+	"""Grant roles to an existing user.
+
+	bench --site <site> execute hc_tracker.setup.install.add_roles --kwargs '{"user": "a@b.com", "roles": "HC Engineer,HC Helpdesk"}'
+	"""
+	if isinstance(roles, str):
+		roles = [r.strip() for r in roles.split(",") if r.strip()]
+	doc = frappe.get_doc("User", user)
+	doc.add_roles(*roles)
+	frappe.db.commit()
+	return frappe.get_roles(user)
