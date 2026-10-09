@@ -1,0 +1,262 @@
+# HC Tracker on Frappe v16 - single-host Docker Compose stack.
+# Layout follows frappe_docker's pwd.yml (backend, configurator, create-site, db, frontend,
+# queue-short, queue-long, redis-cache, redis-queue, scheduler, websocket), but runs a custom
+# image (Dockerfile in this folder) and installs ONLY frappe + hc_tracker on the site.
+#
+#   cp .env.example .env   # then edit the passwords
+#   docker compose build
+#   docker compose up -d
+#   open http://localhost:${HTTP_PORT:-8080}
+
+name: ${COMPOSE_PROJECT_NAME:-hc-tracker}
+
+x-app-image: &app_image
+  image: ${CUSTOM_IMAGE:-hc-tracker}:${CUSTOM_TAG:-latest}
+  pull_policy: never
+  networks:
+    - frappe_network
+
+x-app-volumes: &app_volumes
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+    - logs:/home/frappe/frappe-bench/logs
+
+x-app-env: &app_env
+  TZ: ${TZ:-Asia/Qatar}
+  FRAPPE_REDIS_CACHE: redis://redis-cache:6379
+  FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+
+x-depends-on-configurator: &depends_on_configurator
+  depends_on:
+    configurator:
+      condition: service_completed_successfully
+
+services:
+  backend:
+    <<: [*app_image, *app_volumes, *depends_on_configurator]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-frappe/erpnext}
+        BASE_TAG: ${BASE_TAG:-v16}
+    restart: unless-stopped
+    environment:
+      <<: *app_env
+      DB_HOST: db
+      DB_PORT: "3306"
+    healthcheck:
+      test: ["CMD-SHELL", "wait-for-it -q -t 2 127.0.0.1:8000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  configurator:
+    <<: [*app_image, *app_volumes]
+    restart: "no"
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        ls -1 apps > sites/apps.txt;
+        bench set-config -g db_host $$DB_HOST;
+        bench set-config -gp db_port $$DB_PORT;
+        bench set-config -g redis_cache "redis://$$REDIS_CACHE";
+        bench set-config -g redis_queue "redis://$$REDIS_QUEUE";
+        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
+        bench set-config -gp socketio_port $$SOCKETIO_PORT;
+    environment:
+      TZ: ${TZ:-Asia/Qatar}
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_CACHE: redis-cache:6379
+      REDIS_QUEUE: redis-queue:6379
+      SOCKETIO_PORT: "9000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+
+  create-site:
+    <<: [*app_image, *app_volumes]
+    restart: "no"
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        set -e;
+        wait-for-it -t 120 db:3306;
+        wait-for-it -t 120 redis-cache:6379;
+        wait-for-it -t 120 redis-queue:6379;
+        export start=`date +%s`;
+        until [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".db_host // empty"` ]] && \
+          [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_cache // empty"` ]] && \
+          [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_queue // empty"` ]];
+        do
+          echo "Waiting for sites/common_site_config.json to be created";
+          sleep 5;
+          if (( `date +%s`-start > 120 )); then
+            echo "could not find sites/common_site_config.json with required keys";
+            exit 1;
+          fi;
+        done;
+        echo "sites/common_site_config.json found";
+        if [ -d "sites/$$SITE_NAME" ]; then
+          echo "Site $$SITE_NAME already exists, skipping creation";
+        else
+          bench new-site "$$SITE_NAME" \
+            --mariadb-user-host-login-scope='%' \
+            --db-root-username=root \
+            --db-root-password="$$DB_ROOT_PASSWORD" \
+            --admin-password="$$ADMIN_PASSWORD" \
+            --install-app hc_tracker \
+            --set-default;
+        fi;
+        bench --site "$$SITE_NAME" list-apps | grep -q hc_tracker || bench --site "$$SITE_NAME" install-app hc_tracker;
+        bench --site "$$SITE_NAME" set-config host_name "$$HOST_NAME";
+        bench --site "$$SITE_NAME" execute hc_tracker.setup.install.set_system_time_zone --kwargs '{"time_zone": "Asia/Qatar"}';
+        bench --site "$$SITE_NAME" scheduler enable;
+        bench --site "$$SITE_NAME" scheduler resume;
+        echo "Site $$SITE_NAME ready";
+    environment:
+      TZ: ${TZ:-Asia/Qatar}
+      SITE_NAME: ${SITE_NAME:?Set SITE_NAME in .env}
+      HOST_NAME: ${HOST_NAME:-http://localhost:8080}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  db:
+    image: mariadb:11.8
+    restart: unless-stopped
+    networks:
+      - frappe_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    environment:
+      TZ: ${TZ:-Asia/Qatar}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+      MARIADB_AUTO_UPGRADE: "1"
+    volumes:
+      - db-data:/var/lib/mysql
+
+  frontend:
+    <<: [*app_image, *app_volumes]
+    restart: unless-stopped
+    command:
+      - nginx-entrypoint.sh
+    environment:
+      TZ: ${TZ:-Asia/Qatar}
+      BACKEND: backend:8000
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:?Set SITE_NAME in .env}
+      SOCKETIO: websocket:9000
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: 120
+      CLIENT_MAX_BODY_SIZE: 50m
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+      websocket:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wait-for-it -q -t 2 127.0.0.1:8080 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  queue-long:
+    <<: [*app_image, *app_volumes, *depends_on_configurator]
+    restart: unless-stopped
+    command:
+      - bench
+      - worker
+      - --queue
+      - long,default,short
+    environment:
+      <<: *app_env
+
+  queue-short:
+    <<: [*app_image, *app_volumes, *depends_on_configurator]
+    restart: unless-stopped
+    command:
+      - bench
+      - worker
+      - --queue
+      - short,default
+    environment:
+      <<: *app_env
+
+  redis-queue:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    networks:
+      - frappe_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis-queue-data:/data
+
+  redis-cache:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    networks:
+      - frappe_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  scheduler:
+    <<: [*app_image, *app_volumes]
+    restart: unless-stopped
+    command:
+      - bench
+      - schedule
+    environment:
+      <<: *app_env
+    depends_on:
+      create-site:
+        condition: service_completed_successfully
+
+  websocket:
+    <<: [*app_image, *app_volumes, *depends_on_configurator]
+    restart: unless-stopped
+    command:
+      - node
+      - /home/frappe/frappe-bench/apps/frappe/socketio.js
+    environment:
+      <<: *app_env
+
+volumes:
+  db-data:
+  redis-queue-data:
+  sites:
+  logs:
+
+networks:
+  frappe_network:
+    driver: bridge
