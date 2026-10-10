@@ -68,6 +68,7 @@ def get_events(start, end, filters=None, **kwargs):
 				f"{v.client_name} · {v.engineer_name or v.engineer} ({mode})",
 				getdate(v.visit_date),
 				STATUS_COLORS.get(v.status, "#7f8c8d"),
+				status=v.status,
 			)
 		)
 
