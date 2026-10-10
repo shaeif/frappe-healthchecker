@@ -82,6 +82,15 @@ const pm_visit_form = {
 				)
 			);
 		}
+		if (["To be scheduled", "Scheduled"].includes(doc.status) && (doc.engineer === frappe.session.user || amc_tracker.is_helpdesk())) {
+			frm.add_custom_button(__("Transfer to Another Engineer"), () =>
+				amc_tracker.transfer_dialog(doc.amc, {
+					from_engineer: doc.engineer,
+					// the visit is no longer theirs to open after handing it over
+					after: () => (doc.engineer === frappe.session.user ? frappe.set_route("List", "PM Visit") : frm.reload_doc()),
+				})
+			);
+		}
 		const group = __("Client");
 		frm.add_custom_button(__("Email Client to Schedule"), () => amc_tracker.scheduling_email_dialog(doc.amc, doc.name, () => frm.reload_doc()), group);
 		frm.add_custom_button(__("Log Client Contact"), () => amc_tracker.contact_dialog(doc.amc, doc.name, null, () => frm.reload_doc()), group);

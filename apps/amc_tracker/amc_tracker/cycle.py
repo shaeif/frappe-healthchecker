@@ -179,6 +179,95 @@ def assign_engineers(amc: str, rows) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Transfer an engineer's place on an AMC (the engineer, or the helpdesk on their behalf)
+# ---------------------------------------------------------------------------
+
+
+@frappe.whitelist()
+def transfer_engineer(amc: str, to_engineer: str, reason: str, from_engineer: str | None = None, keep_visit_date=1) -> dict:
+	"""Hand an engineer's rows on the AMC and their open visit of the current cycle to another engineer.
+
+	Visits already completed or reported stay with the original engineer (they did the work).
+	"""
+	user = frappe.session.user
+	from_engineer = (from_engineer or user).strip()
+	to_engineer = (to_engineer or "").strip()
+	reason = (reason or "").strip()
+	if from_engineer != user and not can_assign():
+		frappe.throw(_("You can only transfer your own AMCs."), frappe.PermissionError)
+	if not reason:
+		frappe.throw(_("Give a reason for the transfer."))
+	if not to_engineer or to_engineer == from_engineer:
+		frappe.throw(_("Choose another engineer."))
+	if not is_active_engineer(to_engineer):
+		frappe.throw(_("{0} has no active Engineer profile.").format(full_name(to_engineer)))
+
+	doc = frappe.get_doc("AMC", amc)
+	doc.check_permission("read")
+	if doc.status != "Active":
+		frappe.throw(_("The AMC is {0}. Only active AMCs can be transferred.").format(_(doc.status)))
+	label = cycle_label_of(doc)
+	cycle_visits = get_cycle_visits(doc.name, label)
+	open_statuses = (VISIT_TO_SCHEDULE, VISIT_SCHEDULED)
+	moving = [v for v in cycle_visits if v.engineer == from_engineer and v.status in open_statuses]
+	rows = [r for r in doc.engineers if r.engineer == from_engineer]
+	if not rows and not moving:
+		frappe.throw(_("{0} has nothing to transfer on this AMC.").format(full_name(from_engineer)))
+	if moving and any(v.engineer == to_engineer for v in cycle_visits):
+		frappe.throw(
+			_("{0} already has a visit in cycle {1}. Ask the helpdesk to combine the visits.").format(full_name(to_engineer), label)
+		)
+
+	# Engineers table: the new engineer takes over each row (expertise, lead), without duplicates
+	if rows:
+		taken = {r.expertise or "" for r in doc.engineers if r.engineer == to_engineer}
+		for row in rows:
+			if (row.expertise or "") in taken:
+				doc.remove(row)
+				continue
+			row.engineer = to_engineer
+			row.engineer_name = full_name(to_engineer)
+			taken.add(row.expertise or "")
+		doc.flags.engineer_transfer = True
+		doc.flags.ignore_permissions = True
+		doc.save()
+
+	note = _("Transferred from {0} to {1} by {2}. Reason: {3}").format(
+		full_name(from_engineer), full_name(to_engineer), full_name(user), reason
+	)
+	moved = []
+	for v in moving:
+		visit = frappe.get_doc("PM Visit", v.name)
+		visit.engineer = to_engineer
+		visit.engineer_name = full_name(to_engineer)
+		if not cint(keep_visit_date):
+			visit.visit_date = None
+			visit.start_time = visit.end_time = None
+		visit.flags.engineer_transfer = True
+		visit.flags.engineer_on_team = True
+		visit.flags.ignore_permissions = True
+		visit.save()
+		visit.add_comment("Info", note)
+		moved.append(visit.name)
+	doc.add_comment("Info", note)
+
+	from amc_tracker.notifications.channels import DeliveryError, send_system_notification
+
+	recipients = [to_engineer] + ([from_engineer] if from_engineer != user else []) + ([doc.helpdesk_contact] if doc.helpdesk_contact != user else [])
+	try:
+		send_system_notification(
+			recipients,
+			_("AMC transferred: {0}").format(doc.client_name or doc.name),
+			note,
+			reference_doctype="AMC",
+			reference_name=doc.name,
+		)
+	except DeliveryError:
+		pass
+	return {"visits": moved, "rows": len(rows)}
+
+
+# ---------------------------------------------------------------------------
 # Sign-off (Account / Technical Manager)
 # ---------------------------------------------------------------------------
 

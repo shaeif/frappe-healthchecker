@@ -79,7 +79,7 @@ class PMVisit(Document):
 
 	def validate_engineer_changes(self):
 		"""An engineer (without helpdesk/manager rights) may only plan and report their own visit."""
-		if self.is_new() or sees_all() or frappe.flags.in_install or frappe.flags.in_patch:
+		if self.is_new() or self.flags.engineer_transfer or sees_all() or frappe.flags.in_install or frappe.flags.in_patch:
 			return
 		if ROLE_ENGINEER not in user_roles():
 			return

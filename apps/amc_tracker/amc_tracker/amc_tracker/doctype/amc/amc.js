@@ -126,6 +126,21 @@ const amc_form = {
 		if (amc_tracker.is_helpdesk() && frm.doc.status === "Active") {
 			frm.add_custom_button(__("Assign Engineers"), () => amc_form.assign_dialog(frm), group);
 		}
+		const team = [...new Map((frm.doc.engineers || []).map((r) => [r.engineer, r])).values()];
+		const on_team = team.some((r) => r.engineer === frappe.session.user);
+		if (frm.doc.status === "Active" && (on_team || (amc_tracker.is_helpdesk() && team.length))) {
+			frm.add_custom_button(
+				__("Transfer to Another Engineer"),
+				() =>
+					amc_tracker.transfer_dialog(frm.doc.name, {
+						from_engineer: on_team ? frappe.session.user : null,
+						team: amc_tracker.is_helpdesk() ? team : null,
+						after: () =>
+							on_team && !amc_tracker.is_helpdesk() ? frappe.set_route("List", "AMC") : frm.reload_doc(),
+					}),
+				group
+			);
+		}
 		frm.add_custom_button(
 			__("Email Client to Schedule"),
 			() => amc_tracker.scheduling_email_dialog(frm.doc.name, null, () => frm.reload_doc()),

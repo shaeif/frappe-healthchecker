@@ -45,6 +45,67 @@
 			return frappe.user.has_role(["System Manager", "AMC Admin", "AMC Technical Manager", "AMC Helpdesk"]);
 		},
 
+		// Hand an engineer's place on an AMC (rows + open visit of the current cycle) to another engineer.
+		// team: engineers the helpdesk may pick from; an engineer only transfers their own place.
+		transfer_dialog(amc, { from_engineer, team, after } = {}) {
+			const on_behalf = amc_tracker.is_helpdesk() && (team || []).length;
+			const from = () => (on_behalf ? d.get_value("from_engineer") : from_engineer || frappe.session.user);
+			const d = new frappe.ui.Dialog({
+				title: __("Transfer to Another Engineer"),
+				fields: [
+					{
+						fieldtype: "HTML",
+						options: `<p class="text-muted small">${__(
+							"The new engineer takes over the AMC rows and the visit of the current cycle that is not done yet. Completed and reported visits stay with the original engineer."
+						)}</p>`,
+					},
+					on_behalf
+						? {
+								fieldname: "from_engineer",
+								fieldtype: "Select",
+								label: __("From Engineer"),
+								options: team.map((e) => ({ value: e.engineer, label: e.engineer_name || e.engineer })),
+								default: from_engineer || team[0].engineer,
+								reqd: 1,
+						  }
+						: null,
+					{
+						fieldname: "to_engineer",
+						fieldtype: "Link",
+						options: "Engineer",
+						label: __("Transfer To"),
+						reqd: 1,
+						get_query: () => ({ filters: { status: "Active", name: ["!=", from()] } }),
+					},
+					{ fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1 },
+					{
+						fieldname: "keep_visit_date",
+						fieldtype: "Check",
+						label: __("Keep the agreed visit date"),
+						default: 1,
+						description: __("Untick to let the new engineer set a new date with the client."),
+					},
+				].filter(Boolean),
+				primary_action_label: __("Transfer"),
+				primary_action(values) {
+					frappe
+						.xcall("amc_tracker.cycle.transfer_engineer", {
+							amc,
+							from_engineer: from(),
+							to_engineer: values.to_engineer,
+							reason: values.reason,
+							keep_visit_date: values.keep_visit_date,
+						})
+						.then(() => {
+							d.hide();
+							frappe.show_alert({ message: __("Transferred."), indicator: "green" });
+							after && after(values);
+						});
+				},
+			});
+			d.show();
+		},
+
 		status_color(status) {
 			return (
 				{

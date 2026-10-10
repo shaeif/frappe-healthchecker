@@ -65,7 +65,8 @@ class AMC(Document):
 		"""Helpdesk assigns engineers; engineers attach the combined report. Everything else is for managers."""
 		if self.is_new() or frappe.flags.in_install or frappe.flags.in_migrate or frappe.flags.in_patch:
 			return
-		if self.flags.signed_off_cycle or is_full_access():
+		# engineer_transfer: cycle.transfer_engineer has already checked who may hand over which rows
+		if self.flags.signed_off_cycle or self.flags.engineer_transfer or is_full_access():
 			return
 		roles = user_roles()
 		if "AMC Account Manager" in roles:
