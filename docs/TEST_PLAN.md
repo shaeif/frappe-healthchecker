@@ -34,6 +34,7 @@ Users (one per role, four engineers). The engineers get the *AMC Engineer* role 
 | eng4@amc.test (Mariam) | AMC Engineer | Data Center + Collaboration |
 | am@amc.test | AMC Account Manager | – |
 | tm@amc.test | AMC Technical Manager | – |
+| sysmanager@amc.test (Sami) | **System Manager** (Frappe admin: users, roles, system settings) | – |
 
 Clients and AMCs:
 

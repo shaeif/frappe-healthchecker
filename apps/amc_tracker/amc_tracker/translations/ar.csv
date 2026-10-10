@@ -734,3 +734,6 @@
 "{0} already exists. Open it from the list to change its groups.","{0} موجود بالفعل. افتحه من القائمة لتغيير مجموعاته."
 "You cannot remove yourself from AMC Admin. Ask another admin.","لا يمكنك إزالة نفسك من مسؤولي العقود. اطلب ذلك من مسؤول آخر."
 "You cannot disable your own account.","لا يمكنك تعطيل حسابك."
+"Add users and put them in groups","إضافة المستخدمين وتوزيعهم على المجموعات"
+"Users (System Manager)","المستخدمون (مدير النظام)"
+"Frappe's full user settings","إعدادات المستخدمين الكاملة في Frappe"

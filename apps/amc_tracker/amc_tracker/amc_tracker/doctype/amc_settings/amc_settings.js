@@ -8,7 +8,15 @@ const AMC_SETUP_TILES = [
 	{ label: "Engineer Leave", doctype: "Engineer Leave", icon: "plane", help: "Engineer availability for visit dates" },
 	{ label: "Public Holidays", doctype: "Public Holiday", icon: "calendar-x", help: "Non-working days (add Eid dates yearly)" },
 	{ label: "Expertise", doctype: "Expertise", icon: "graduation-cap", help: "Areas of expertise of the engineers" },
-	{ label: "Users", doctype: "User", icon: "users", help: "Give users the AMC roles" },
+	// AMC Admins add people and set their groups on the Team page; Frappe's User list is System Manager only
+	{ label: "Team", route: "/desk/amc-team", icon: "users", help: "Add users and put them in groups", show: () => amc_tracker.is_admin() },
+	{
+		label: "Users (System Manager)",
+		doctype: "User",
+		icon: "settings",
+		help: "Frappe's full user settings",
+		show: () => frappe.user.has_role("System Manager"),
+	},
 ];
 
 frappe.ui.form.on("AMC Settings", {
@@ -26,9 +34,9 @@ const amc_settings = {
 	render_setup(frm) {
 		const field = frm.get_field("setup_links");
 		if (!field) return;
-		const tiles = AMC_SETUP_TILES.filter((t) => frappe.model.can_read(t.doctype))
+		const tiles = AMC_SETUP_TILES.filter((t) => (t.show ? t.show() : frappe.model.can_read(t.doctype)))
 			.map(
-				(t) => `<a class="amc-setup-tile" href="/desk/${frappe.router.slug(t.doctype)}">
+				(t) => `<a class="amc-setup-tile" href="${t.route || `/desk/${frappe.router.slug(t.doctype)}`}">
 					<span class="amc-setup-icon">${frappe.utils.icon(t.icon, "md")}</span>
 					<span><b>${__(t.label)}</b><br><span class="text-muted small">${__(t.help)}</span></span></a>`
 			)

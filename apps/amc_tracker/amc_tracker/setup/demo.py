@@ -23,6 +23,8 @@ TEST_USERS = [
 	(f"eng4@{TEST_DOMAIN}", "Mariam Engineer", []),
 	(f"am@{TEST_DOMAIN}", "Ali AccountManager", ["AMC Account Manager"]),
 	(f"tm@{TEST_DOMAIN}", "Tariq TechManager", ["AMC Technical Manager"]),
+	# Frappe's own admin: users, roles and system settings (the AMC Admin manages people on the Team page)
+	(f"sysmanager@{TEST_DOMAIN}", "Sami SystemManager", ["System Manager"]),
 ]
 
 RS, WL, SEC, DC, COLLAB = "Routing & Switching", "Wireless", "Security / Firewall", "Data Center", "Collaboration"

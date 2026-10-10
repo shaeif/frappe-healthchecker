@@ -135,7 +135,8 @@ fi
 if [[ -n "$demo_password" ]]; then
 	cat <<EOF
     Demo users (password: $demo_password)
-               admin@amc.test (AMC Admin), helpdesk@amc.test, eng1..eng4@amc.test, am@amc.test, tm@amc.test
+               admin@amc.test (AMC Admin), helpdesk@amc.test, eng1..eng4@amc.test, am@amc.test, tm@amc.test,
+               sysmanager@amc.test (System Manager)
                Remove them later: docker compose exec backend bench --site $SITE_NAME execute amc_tracker.setup.demo.delete_test_data
 EOF
 fi
