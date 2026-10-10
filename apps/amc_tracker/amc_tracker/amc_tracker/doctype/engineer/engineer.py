@@ -20,8 +20,9 @@ class Engineer(Document):
 			seen.add(row.expertise)
 
 	def on_update(self):
-		# Any user (helpdesk, manager...) can also be an engineer: give them the role when they get a profile
-		if ROLE_ENGINEER not in frappe.get_roles(self.user):
+		# Any user (helpdesk, manager...) can also be an engineer: give them the role when they get a profile.
+		# An inactive profile does not, so taking someone out of the Engineer group sticks.
+		if self.status == "Active" and ROLE_ENGINEER not in frappe.get_roles(self.user):
 			user = frappe.get_doc("User", self.user)
 			user.flags.ignore_permissions = True
 			user.add_roles(ROLE_ENGINEER)
