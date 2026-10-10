@@ -20,6 +20,8 @@ FREQUENCY_DAYS = {
 SCHEDULE_REMINDER_DAYS = {"Monthly": 7, "Quarterly": 21, "Half-yearly": 30, "Yearly": 45}
 # days before the visit date: (engineer preparation, client reminder)
 VISIT_DAYS = {"Monthly": (1, 1), "Quarterly": (2, 2), "Half-yearly": (3, 2), "Yearly": (3, 2)}
+# days after the visit date while its report is missing: (engineer reminder, Technical Manager escalation)
+REPORT_DAYS = {"Monthly": (2, 4), "Quarterly": (3, 7), "Half-yearly": (3, 7), "Yearly": (5, 10)}
 
 DEFAULT_FLOW_NAME = "Standard PM Notifications"
 
@@ -123,7 +125,42 @@ def build_steps(frequency: str) -> list[dict]:
 			enabled=0, recipient_type="Client Contact", cc_type="Visit Engineer",
 			trigger_mode="On visit scheduled", show_popup=0,
 		),
+		*report_steps(frequency),
 	]
+
+
+def report_steps(frequency: str) -> list[dict]:
+	"""The visit happened but its report is missing: remind the engineer, then escalate to the Technical Manager."""
+	remind_days, escalate_days = REPORT_DAYS[frequency]
+	return [
+		_step(
+			12, "Engineer - report pending after the visit", T("REPORT_PENDING"),
+			recipient_type="Visit Engineer", cc_type="Role", cc_role=HELPDESK,
+			trigger_mode="Days after visit date (report pending)", trigger_days=remind_days, repeat_every_days=2,
+		),
+		_step(
+			13, "Technical Manager - report missing after the visit", T("REPORT_OVERDUE"),
+			recipient_type="AMC Field", recipient_field="technical_manager", fallback_role=TECH_MANAGER,
+			cc_type="Visit Engineer",
+			trigger_mode="Days after visit date (report pending)", trigger_days=escalate_days, channel="Email + Teams",
+		),
+	]
+
+
+def add_report_steps():
+	"""Patch: give the standard rule sets of existing sites the report-pending rules (custom rule sets are left alone)."""
+	for flow_name, _frequency, _is_default, days_from in FLOW_DEFINITIONS:
+		if not frappe.db.exists("AMC Notification Flow", flow_name):
+			continue
+		flow = frappe.get_doc("AMC Notification Flow", flow_name)
+		if any(s.trigger_mode == "Days after visit date (report pending)" for s in flow.steps):
+			continue
+		next_no = max([s.step_no for s in flow.steps] or [0]) + 1
+		for i, step in enumerate(report_steps(days_from)):
+			step["step_no"] = next_no + i
+			flow.append("steps", step)
+		flow.flags.ignore_permissions = True
+		flow.save()
 
 
 def create_default_flows(only_if_none_exist: bool = False):

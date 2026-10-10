@@ -33,6 +33,7 @@ from amc_tracker.notifications import templates as tpl
 from amc_tracker.scheduling import is_working_day, shift_to_working_day, skip_non_working_days
 from amc_tracker.utils import (
 	AMC_USER_FIELDS,
+	VISIT_COMPLETED,
 	VISIT_SCHEDULED,
 	VISIT_TO_SCHEDULE,
 	get_settings,
@@ -45,12 +46,16 @@ MODE_AFTER_DUE = "Days after due date (overdue)"
 MODE_AFTER_PREVIOUS = "Days after previous step if not resolved"
 MODE_STATUS = "On cycle status change"
 MODE_BEFORE_VISIT = "Days before visit date"
+MODE_AFTER_VISIT = "Days after visit date (report pending)"
 MODE_VISIT_ASSIGNED = "On visit assigned"
 MODE_VISIT_SCHEDULED = "On visit scheduled"
 MODE_VISIT_RESCHEDULED = "On visit rescheduled"
 MODE_VISIT_REPORTED = "On visit report submitted"
 VISIT_EVENT_MODES = (MODE_VISIT_ASSIGNED, MODE_VISIT_SCHEDULED, MODE_VISIT_RESCHEDULED, MODE_VISIT_REPORTED)
-VISIT_MODES = (MODE_BEFORE_VISIT, *VISIT_EVENT_MODES)
+VISIT_DATE_MODES = (MODE_BEFORE_VISIT, MODE_AFTER_VISIT)
+VISIT_MODES = (*VISIT_DATE_MODES, *VISIT_EVENT_MODES)
+# visits a date-based visit rule looks at: reminders before an upcoming visit; report chasers after it
+VISIT_STATUSES_FOR_MODE = {MODE_BEFORE_VISIT: (VISIT_SCHEDULED,), MODE_AFTER_VISIT: (VISIT_SCHEDULED, VISIT_COMPLETED)}
 EVENT_MODES = (MODE_STATUS, *VISIT_EVENT_MODES)
 
 CH_EMAIL = "Email"
@@ -419,6 +424,21 @@ def evaluate_step(ctx: Context, step, on_date, sent_map, settings, steps=None, s
 			result.planned_date = getdate(planned)
 			result.state, result.reason = STATE_SKIPPED, _("Visit date has passed")
 			return result
+	elif mode == MODE_AFTER_VISIT:
+		result.planned_label = _("{0} day(s) after the visit while the report is missing").format(days)
+		if not visit or not visit.visit_date:
+			result.reason = _("Visit date not set yet")
+			if sent:
+				result.state = STATE_SENT
+			return result
+		if visit.status not in VISIT_STATUSES_FOR_MODE[MODE_AFTER_VISIT]:
+			result.state = STATE_SENT if sent else STATE_SKIPPED
+			result.reason = _("Visit is {0}").format(_(visit.status))
+			return result
+		planned = add_days(getdate(visit.visit_date), days)
+		# a new visit date restarts the chase
+		sent = _sent_since(sent, visit.get("last_rescheduled_on"))
+		result.last_sent = sent["last"] if sent else None
 	elif not due:
 		result.state, result.reason = STATE_SKIPPED, _("AMC has no Next PM Due Date")
 		return result
@@ -514,6 +534,7 @@ def build_context(ctx: Context, step, flow, on_date, status_event=None, extra=No
 		"due_date": formatdate(due),
 		"visit_date": formatdate(visit_day) if visit_day else "",
 		"days_to_visit": date_diff(visit_day, on_date) if visit_day else None,
+		"days_since_visit": date_diff(on_date, visit_day) if visit_day else None,
 		"amc_url": get_url_to_form("AMC", amc.name),
 		"visit_url": get_url_to_form("PM Visit", visit.name) if visit else "",
 		"cycle_label": ctx.cycle_label,
@@ -724,9 +745,9 @@ def process_amc(amc, on_date=None) -> int:
 		if step.trigger_mode == MODE_STATUS:
 			written += _retry_failed_status_step(ctx, flow, step, steps, on_date, sent_map, settings)
 			continue
-		if step.trigger_mode == MODE_BEFORE_VISIT:
+		if step.trigger_mode in VISIT_DATE_MODES:
 			for v in ctx.visits:
-				if v.status != VISIT_SCHEDULED:
+				if v.status not in VISIT_STATUSES_FOR_MODE[step.trigger_mode] or not v.visit_date:
 					continue
 				vctx = Context(amc, _visit_doc(v.name))
 				vctx._visits, vctx._client = ctx.visits, ctx.client
@@ -863,10 +884,10 @@ def evaluate_flow(amc, flow, on_date=None) -> list[dict]:
 
 	for step in steps:
 		if is_visit_step(step):
-			visits = [v for v in ctx.visits if step.trigger_mode != MODE_BEFORE_VISIT or v.visit_date]
+			visits = [v for v in ctx.visits if step.trigger_mode not in VISIT_DATE_MODES or v.visit_date]
 			if not visits:
 				ev = frappe._dict(
-					state=STATE_PENDING, reason=_("No PM visits with a date in this cycle yet") if step.trigger_mode == MODE_BEFORE_VISIT else _("Waiting for a visit event"),
+					state=STATE_PENDING, reason=_("No PM visits with a date in this cycle yet") if step.trigger_mode in VISIT_DATE_MODES else _("Waiting for a visit event"),
 					planned_date=None, planned_label=step.trigger_mode, to=[], cc=[], channels=[], due_channels=[], last_sent=None,
 				)
 				if not cint(step.enabled):

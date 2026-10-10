@@ -118,6 +118,19 @@ REPORTS_READY_MESSAGE = """<p>Hello,</p>
 <b>Sign Off Cycle</b>.</p>
 <p>Findings: {{ doc.findings_summary or "-" }}</p>""" + _FOOTER
 
+REPORT_PENDING_SUBJECT = "[AMC] Report pending - visit {{ visit_date }}: {{ doc.client_name }}"
+REPORT_PENDING_MESSAGE = """<p>Hello {{ visit.engineer_name or "Engineer" }},</p>
+<p>Your PM visit for <b>{{ doc.client_name }}</b> was on <b>{{ visit_date }}</b> ({{ days_since_visit }} days ago)
+and its report has not been uploaded yet.</p>
+<p><b>Action:</b> open the PM visit, mark it completed if needed and attach the report (or tick
+"Included in the combined report" if the lead engineer sends one report for all visits).</p>""" + _FOOTER
+
+REPORT_OVERDUE_SUBJECT = "[AMC] Escalation - PM report missing {{ days_since_visit }} days after the visit: {{ doc.client_name }}"
+REPORT_OVERDUE_MESSAGE = """<p>Hello,</p>
+<p>The PM visit for <b>{{ doc.client_name }}</b> by <b>{{ visit.engineer_name or visit.engineer }}</b> was on
+<b>{{ visit_date }}</b> ({{ days_since_visit }} days ago) and there is still no report.</p>
+<p><b>Action:</b> follow up with the engineer. The PM is due on {{ due_date }}.</p>""" + _FOOTER
+
 # Client scheduling email (sent from the AMC or the PM Visit form; AMC Settings can override)
 SCHEDULING_EMAIL_SUBJECT = "Preventive maintenance scheduling - {{ doc.client_name }} (due {{ due_date }})"
 SCHEDULING_EMAIL_MESSAGE = """<p>Dear {{ client.contact_name or "Customer" }},</p>
@@ -209,6 +222,16 @@ REPORTS_READY_MESSAGE_AR = """<p>مرحباً،</p>
 <p>تم تقديم جميع تقارير زيارات الصيانة للعميل <b>{{ doc.client_name }}</b> (الدورة {{ cycle_label }}).</p>
 <p><b>المطلوب:</b> مشاركة التقارير مع العميل، وإرفاق اعتماد العميل في العقد، ثم الضغط على <b>اعتماد الدورة</b>.</p>
 <p>الملاحظات: {{ doc.findings_summary or "-" }}</p>""" + _FOOTER_AR
+
+REPORT_PENDING_SUBJECT_AR = "[عقد الصيانة] التقرير معلق - زيارة {{ visit_date }}: {{ doc.client_name }}"
+REPORT_PENDING_MESSAGE_AR = """<p>مرحباً {{ visit.engineer_name or "المهندس" }}،</p>
+<p>تمت زيارة الصيانة للعميل <b>{{ doc.client_name }}</b> بتاريخ <b>{{ visit_date }}</b> (قبل {{ days_since_visit }} يوم) ولم يُرفع التقرير بعد.</p>
+<p><b>المطلوب:</b> فتح الزيارة وتعليمها كمكتملة عند الحاجة وإرفاق التقرير (أو تحديد "مشمولة في التقرير الموحد").</p>""" + _FOOTER_AR
+
+REPORT_OVERDUE_SUBJECT_AR = "[عقد الصيانة] تصعيد - تقرير الصيانة غير مرفوع بعد {{ days_since_visit }} يوم من الزيارة: {{ doc.client_name }}"
+REPORT_OVERDUE_MESSAGE_AR = """<p>مرحباً،</p>
+<p>تمت زيارة الصيانة للعميل <b>{{ doc.client_name }}</b> من قبل <b>{{ visit.engineer_name or visit.engineer }}</b> بتاريخ <b>{{ visit_date }}</b> (قبل {{ days_since_visit }} يوم) ولا يوجد تقرير حتى الآن.</p>
+<p><b>المطلوب:</b> المتابعة مع المهندس. تاريخ استحقاق الصيانة {{ due_date }}.</p>""" + _FOOTER_AR
 
 SCHEDULING_EMAIL_SUBJECT_AR = "جدولة الصيانة الوقائية - {{ doc.client_name }} (الاستحقاق {{ due_date }})"
 SCHEDULING_EMAIL_MESSAGE_AR = """<p>عزيزنا {{ client.contact_name or "العميل" }}،</p>

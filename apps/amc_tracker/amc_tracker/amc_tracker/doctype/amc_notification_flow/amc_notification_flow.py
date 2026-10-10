@@ -13,7 +13,7 @@ MODE_STATUS = "On cycle status change"
 MODE_AFTER_PREVIOUS = "Days after previous step if not resolved"
 # Recipient types that only make sense for rules about one PM visit
 VISIT_ONLY_TARGETS = {"Visit Engineer"}
-VISIT_MODES = {"On visit assigned", "Days before visit date", "On visit scheduled", "On visit rescheduled", "On visit report submitted"}
+VISIT_MODES = {"On visit assigned", "Days before visit date", "Days after visit date (report pending)", "On visit scheduled", "On visit rescheduled", "On visit report submitted"}
 
 
 class AMCNotificationFlow(Document):
