@@ -471,3 +471,59 @@ amc-tracker/
         ├── sidebar/    amc_tracker (role-based)
         └── number_card/ · dashboard_chart/ · dashboard_chart_source/
 ```
+
+---
+
+## 14. Roadmap (ideas, not built yet)
+
+Candidate features, roughly in order of value. Each builds on something the app already has or on a gap found in
+the lifecycle test (see `docs/LIFECYCLE.md`).
+
+**Highest value**
+
+1. **Client sign-off link.** Email the client a link to the visit summary and reports, where they approve or comment
+   (no login). The approval completes the sign-off and records who approved and when, instead of uploading a
+   sign-off by hand.
+2. **On-site visit checklist.** A checklist per area of expertise (e.g. Firewall: firmware version, HA status,
+   backups) instead of free-text findings, so every report is consistent. The visit generates the PDF report itself,
+   so engineers no longer write and upload one.
+3. **Equipment list per AMC.** Devices in scope (model, serial number, location, warranty / end-of-life date). Visits
+   tick off the devices checked; flag devices not checked for two cycles.
+4. **Contract renewal workflow.** Renewal alerts exist but nothing follows. A pipeline for the Account Manager
+   (quoted → sent → won / lost) that creates the next AMC with the same team and settings in one click.
+5. **Mobile view for engineers.** A simple phone screen with today's and upcoming visits: check in on site (time and
+   location), upload photos, and mark the visit completed from the client site.
+
+**Scheduling and workload**
+
+6. **Engineer workload view.** Visits per engineer per week, so the helpdesk sees who is overloaded before
+   assigning. Assign Engineers suggests the engineer with the right expertise and the fewest visits that week.
+7. **Client picks the date.** The scheduling email offers 2–3 dates as clickable options; the client's choice sets
+   the visit date, so there is no back-and-forth call.
+8. **Calendar invites.** When a visit date is set, send an Outlook invite to the engineer and the client contact,
+   and update it on reschedule.
+
+**Escalation and quality**
+
+9. **SLA scores.** Per client and per engineer: % of PMs done on time, average days late, average days from visit
+   to report, number of reschedules. Feeds the Management Summary and an engineer scorecard.
+10. **Repeat-finding tracker.** Flag an issue found in two cycles in a row (e.g. "firmware outdated") and turn it
+    into an action item the Account Manager raises with the client.
+11. **Weekly Teams digest per manager.** Each manager's own list: overdue, waiting on them, due next week.
+
+**Admin and operations**
+
+12. **Bulk actions on the Team page.** Import users from Excel; reassign everything one engineer owns when they
+    leave (the transfer feature handles one AMC at a time).
+13. **Holiday and leave calendar view.** The data already exists for availability checks; show it on a calendar
+    for planning.
+14. **Settings health check.** One page that flags missing setup: no outgoing email account, no Teams webhook, AMCs
+    without a Technical Manager, engineers without expertise.
+15. **Client portal (read-only).** Clients see their AMCs, upcoming visits and past reports without emailing to ask.
+
+**Smaller improvements**
+
+* Remember a resized list column per user (today it resets when the page reloads, for users without System Manager).
+* A "Back to AMCs" button on the Excel import screen (it opens Frappe's own Data Import area).
+* Contract value on the AMC, giving revenue per AMC in the Management Summary.
+* Rescheduling that can require client confirmation, with a reason the client sees.
