@@ -167,14 +167,21 @@ They open from **Settings > Setup**. Leave is also on each Engineer profile (*Ad
 * In an AMC's Engineers table and in *Assign Engineers*, only active engineers are offered. Picking an engineer fills
   in their areas.
 
-Add users:
+Add users: **sidebar > Team** (AMC Admin and System Manager). **Add User** asks for the name, email (the login),
+mobile, the **groups** (AMC Admin, Technical Manager, Account Manager, Helpdesk, Engineer; tick several if someone
+does both) and, for engineers, their areas of expertise (this creates the Engineer profile). Leave the password empty
+to email the user a link to set their own. Click a row to change someone's groups or to **Disable User** when they
+leave (an engineer's profile becomes Inactive; their history stays). The Team page only changes AMC groups: an AMC
+Admin cannot grant System Manager, change a System Manager's account, or remove their own AMC Admin group.
+
+From the command line:
 ```bash
 docker compose exec backend bench --site amc.localhost add-user omar@company.qa --first-name Omar --last-name Engineer \
   --user-type "System User" --password 'Choose-A-Strong-One'     # then create his Engineer profile
 docker compose exec backend bench --site amc.localhost execute amc_tracker.setup.install.add_roles \
   --kwargs '{"user": "omar@company.qa", "roles": "AMC Engineer,AMC Helpdesk"}'
 ```
-UI alternative: **Settings > Setup > Users > (user) > Roles**.
+A System Manager can also use **Settings > Setup > Users > (user) > Roles**.
 
 These rules are enforced by `permission_query_conditions` (lists, reports, cards) and `has_permission` (documents) in
 `amc_tracker/permissions.py`. The field-level limits for the helpdesk and engineers are enforced in
@@ -233,6 +240,8 @@ default for *All*. Day values differ by frequency; this table uses the Quarterly
 | 9 | Visit rescheduled | the visit's engineer, CC helpdesk | every date change |
 | 10 | Account Manager - reports ready for sign-off | AMC account manager | cycle becomes *Reports submitted* |
 | 11 | Client - visit confirmation | client contact (CC engineer) | when a visit date is set. **Disabled** by default; enable it if you want it |
+| 12 | Engineer - report pending after the visit | the visit's engineer, CC helpdesk | 3 days after the visit date while there is no report (Monthly 2, Yearly 5), every 2 days |
+| 13 | Technical Manager - report missing after the visit | AMC technical manager, CC the engineer | 7 days after the visit date while there is no report (Monthly 4, Yearly 10) |
 
 Each rule has these settings:
 

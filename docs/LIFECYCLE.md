@@ -67,10 +67,16 @@ Then the admin, logged in, does the following:
 
 ### 2.1 Users
 
-Each person needs a Frappe user. In the UI, go to **Settings > Setup > Users > + Add User**:
+Each person needs a Frappe user. As the AMC Admin, open **sidebar > Team > Add User**:
 
-* email, first and last name;
-* tick the role for non-engineers: *AMC Helpdesk*, *AMC Account Manager* or *AMC Technical Manager*.
+* full name, email (the login), mobile;
+* tick their **groups**: *AMC Admin*, *AMC Technical Manager*, *AMC Account Manager*, *AMC Helpdesk*, *AMC Engineer*
+  (several if someone does both, e.g. a technical manager who also does visits);
+* for engineers, tick their areas of expertise: this creates the Engineer profile (section 2.3) in the same step;
+* set a starting password, or leave it empty to email them a link.
+
+Click a row on the Team page to move someone to other groups or to disable a leaver. A System Manager can still use
+**Settings > Setup > Users**.
 
 From the command line:
 ```bash
@@ -322,6 +328,10 @@ it, then click **Sign Off Cycle**:
 ```
 
 ### 8.3 If it runs late
+
+If a visit has happened but its report is still missing, the engineer is reminded **3 days after the visit** (CC the
+helpdesk, every 2 days) and the technical manager is told **7 days after the visit** (Quarterly values; Monthly 2/4,
+Yearly 5/10). This happens before the due date, so a missing report is chased while there is still time.
 
 From **due + 1 day**, the technical manager (CC the account manager) gets the **overdue escalation** every working
 day until sign-off. The AMC also appears in the **daily overdue digest** and under *Overdue* in the PM To-Do.

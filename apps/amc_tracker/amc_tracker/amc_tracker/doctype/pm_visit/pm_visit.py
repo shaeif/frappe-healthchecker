@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.model import no_value_fields, table_fields
 from frappe.model.document import Document
-from frappe.utils import cint, cstr, getdate, now_datetime, today
+from frappe.utils import cint, cstr, get_time, getdate, now_datetime, today
 
 from amc_tracker.cycle import cycle_label_of, refresh_cycle_status, visit_status
 from amc_tracker.utils import (
@@ -98,7 +98,8 @@ class PMVisit(Document):
 			frappe.throw(_("Engineers can only plan and report their visit. Not allowed: {0}").format(", ".join(changed)), frappe.PermissionError)
 
 	def validate_times(self):
-		if self.start_time and self.end_time and cstr(self.end_time) <= cstr(self.start_time):
+		# compare as times: from the database they are timedeltas, and "12:00:00" < "9:00:00" as text
+		if self.start_time and self.end_time and get_time(self.end_time) <= get_time(self.start_time):
 			frappe.throw(_("'To' time must be after 'From' time."))
 
 	def check_availability(self):

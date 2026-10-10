@@ -130,6 +130,8 @@ def save_member(
 				"user_type": "System User",
 				"time_zone": TIME_ZONE,
 				"send_welcome_email": 0 if password else cint(send_welcome_email),
+				# groups on insert, or Frappe warns that the new user "has no roles enabled"
+				"roles": [{"role": g} for g in groups],
 			}
 		)
 		user.flags.ignore_permissions = True
