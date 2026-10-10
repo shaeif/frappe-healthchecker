@@ -16,7 +16,7 @@ add_to_apps_screen = [
 		"name": app_name,
 		"logo": "/assets/amc_tracker/images/amc_tracker_logo.svg",
 		"title": app_title,
-		"route": "/desk/amc-tracker",
+		"route": "/amc-tracker",
 		"has_permission": "amc_tracker.permissions.has_app_permission",
 	}
 ]
